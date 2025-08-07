@@ -4,17 +4,15 @@
   "description": "Backend API for Framium Framer Plugin",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
+    "dev": "vercel dev",
+    "deploy": "vercel",
+    "lint": "eslint api/ lib/ --ext .ts",
     "db:setup": "psql $DATABASE_URL < api/schema.sql",
     "db:migrate": "node scripts/migrate.js",
     "test": "jest",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "next": "^14.0.0",
     "@vercel/postgres": "^0.5.0",
     "stripe": "^14.0.0",
     "openai": "^4.20.0",
@@ -23,10 +21,8 @@
     "micro": "^10.0.1",
     "cors": "^2.8.5",
     "helmet": "^7.0.0",
-    "express-rate-limit": "^7.0.0",
     "bcryptjs": "^2.4.3",
-    "nodemailer": "^6.9.0",
-    "ioredis": "^5.3.0"
+    "nodemailer": "^6.9.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -39,7 +35,6 @@
     "@types/jest": "^29.0.0",
     "ts-jest": "^29.0.0",
     "eslint": "^8.0.0",
-    "eslint-config-next": "^14.0.0",
     "prettier": "^3.0.0"
   },
   "engines": {
