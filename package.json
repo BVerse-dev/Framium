@@ -1,0 +1,58 @@
+{
+  "name": "framium-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Framium Framer Plugin",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:setup": "psql $DATABASE_URL < api/schema.sql",
+    "db:migrate": "node scripts/migrate.js",
+    "test": "jest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "@vercel/postgres": "^0.5.0",
+    "stripe": "^14.0.0",
+    "openai": "^4.20.0",
+    "@anthropic-ai/sdk": "^0.20.0",
+    "jsonwebtoken": "^9.0.0",
+    "micro": "^10.0.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "express-rate-limit": "^7.0.0",
+    "bcryptjs": "^2.4.3",
+    "nodemailer": "^6.9.0",
+    "ioredis": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/bcryptjs": "^2.4.0",
+    "@types/cors": "^2.8.0",
+    "@types/nodemailer": "^6.4.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "framer",
+    "plugin",
+    "ai",
+    "design",
+    "backend",
+    "api"
+  ],
+  "author": "Framium Labs",
+  "license": "MIT"
+}

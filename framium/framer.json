@@ -1,0 +1,10 @@
+{
+  "id": "230d07",
+  "name": "Framium",
+  "modes": [
+    "canvas"
+  ],
+  "icon": "/icon.svg",
+  "description": "AI-powered design and coding agent for Framer - Generate, design, and animate with multiple AI models",
+  "author": "Framium Labs"
+}
