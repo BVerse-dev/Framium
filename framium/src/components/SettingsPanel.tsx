@@ -3,7 +3,11 @@ import { LogOut, User, Shield, Palette, Code, HelpCircle, ExternalLink, Save } f
 import { useAuth } from '../contexts/AuthContext'
 import { useModel } from '../contexts/ModelContext'
 
-export function SettingsPanel() {
+interface SettingsPanelProps {
+  onOpenAuth?: (mode?: 'signin' | 'signup') => void
+}
+
+export function SettingsPanel({ onOpenAuth }: SettingsPanelProps) {
   const { user, logout } = useAuth()
   const { mode, setMode } = useModel()
   const [activeTab, setActiveTab] = useState<'account' | 'preferences' | 'about'>('account')
@@ -172,9 +176,20 @@ export function SettingsPanel() {
             <div className="auth-required">
               <h4>Sign in required</h4>
               <p>Please sign in to access your account settings</p>
-              <button className="gradient-button">
-                Sign In
-              </button>
+              <div className="auth-buttons">
+                <button 
+                  className="gradient-button"
+                  onClick={() => onOpenAuth?.('signin')}
+                >
+                  Sign In
+                </button>
+                <button 
+                  className="gradient-button signup"
+                  onClick={() => onOpenAuth?.('signup')}
+                >
+                  Sign Up
+                </button>
+              </div>
             </div>
           )}
         </div>

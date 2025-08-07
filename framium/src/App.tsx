@@ -6,6 +6,7 @@ import { TasksPanel } from "./components/TasksPanel"
 import { ModelsPanel } from "./components/ModelsPanel"
 import { ProjectPanel } from "./components/ProjectPanel"
 import { SettingsPanel } from "./components/SettingsPanel"
+import { AuthModal } from "./components/AuthModal"
 import { AuthProvider } from "./contexts/AuthContext"
 import { ModelProvider } from "./contexts/ModelContext"
 import "./App.css"
@@ -30,6 +31,17 @@ function useSelection() {
 export function App() {
     const selection = useSelection()
     const [activePage, setActivePage] = useState<'chat' | 'tasks' | 'models' | 'project' | 'settings'>('chat')
+    const [authModalOpen, setAuthModalOpen] = useState(false)
+    const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin')
+
+    const openAuthModal = (mode: 'signin' | 'signup' = 'signin') => {
+        setAuthModalMode(mode)
+        setAuthModalOpen(true)
+    }
+
+    const closeAuthModal = () => {
+        setAuthModalOpen(false)
+    }
 
     return (
         <AuthProvider>
@@ -45,8 +57,15 @@ export function App() {
                         {activePage === 'tasks' && <TasksPanel />}
                         {activePage === 'models' && <ModelsPanel />}
                         {activePage === 'project' && <ProjectPanel selection={selection} />}
-                        {activePage === 'settings' && <SettingsPanel />}
+                        {activePage === 'settings' && <SettingsPanel onOpenAuth={openAuthModal} />}
                     </div>
+                    
+                    {/* Auth Modal */}
+                    <AuthModal 
+                        isOpen={authModalOpen}
+                        onClose={closeAuthModal}
+                        initialMode={authModalMode}
+                    />
                 </div>
             </ModelProvider>
         </AuthProvider>
