@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
+// AuthModal Component - Beautiful authentication modal with Sign In/Sign Up
+// Integrated with Supabase backend and AuthContext
+
 // Simple SVG Icon Components
 const XIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
