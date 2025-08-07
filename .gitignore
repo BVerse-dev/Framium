@@ -107,6 +107,7 @@ Thumbs.db
 checklist.md
 audit-*.md
 INTERACTION_AUDIT_CHECKLIST.md
+README-BACKEND.md
 .github/
 test-files/
 scripts/test-*
