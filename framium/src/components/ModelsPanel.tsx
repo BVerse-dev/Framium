@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Lock, Zap, Flame, Rocket, TrendingUp, Clock } from 'lucide-react'
+import { Check, Lock, Zap, Flame, Rocket, TrendingUp, Clock, Crown } from 'lucide-react'
 import { framer } from 'framer-plugin'
 import { useAuth } from '../contexts/AuthContext'
 import { useModel, AI_MODELS, AIModel } from '../contexts/ModelContext'
@@ -8,20 +8,23 @@ export function ModelsPanel() {
   const { user, updatePlan } = useAuth()
   const { selectedModel, setSelectedModel, canUseModel, getTokenCost } = useModel()
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState<'BASIC' | 'MAX' | 'BEAST'>('MAX')
+  const [selectedPlan, setSelectedPlan] = useState<'BASIC' | 'MAX' | 'BEAST' | 'ULTIMATE'>('MAX')
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [isLoading, setIsLoading] = useState(false)
 
   const modelsByTier = {
     BASIC: AI_MODELS.filter(m => m.tier === 'BASIC'),
     MAX: AI_MODELS.filter(m => m.tier === 'MAX'),
-    BEAST: AI_MODELS.filter(m => m.tier === 'BEAST')
+    BEAST: AI_MODELS.filter(m => m.tier === 'BEAST'),
+    ULTIMATE: AI_MODELS.filter(m => m.tier === 'BEAST') // Use BEAST models for now
   }
 
   const planDetails = {
     BASIC: {
       icon: <Zap size={20} className="text-gray-400" />,
       name: 'Basic',
-      price: '$9/month',
+      monthlyPrice: 9,
+      yearlyPrice: 90,
       tokens: '50K tokens/month',
       features: ['GPT-3.5 Turbo', 'Claude 3 Haiku', 'Basic components', 'Standard support'],
       color: '#6b7280'
@@ -29,7 +32,8 @@ export function ModelsPanel() {
     MAX: {
       icon: <Rocket size={20} className="text-blue-400" />,
       name: 'Max',
-      price: '$29/month',
+      monthlyPrice: 29,
+      yearlyPrice: 290,
       tokens: '250K tokens/month',
       features: ['All Basic models', 'GPT-4 Turbo', 'Claude 3 Sonnet', 'Advanced animations', 'Priority support'],
       color: '#3b82f6'
@@ -37,10 +41,20 @@ export function ModelsPanel() {
     BEAST: {
       icon: <Flame size={20} className="text-orange-400" />,
       name: 'Beast',
-      price: '$99/month',
+      monthlyPrice: 79,
+      yearlyPrice: 790,
       tokens: '1M tokens/month',
       features: ['All Max models', 'Claude 3 Opus', 'Gemini Pro', 'Agent mode', 'Custom integrations', 'White-glove support'],
       color: '#f97316'
+    },
+    ULTIMATE: {
+      icon: <Crown size={20} className="text-purple-400" />,
+      name: 'Ultimate',
+      monthlyPrice: 199,
+      yearlyPrice: 1990,
+      tokens: 'Unlimited tokens',
+      features: ['All Beast models', 'Custom model training', 'Advanced model control', 'White-label options', 'Custom integrations', '24/7 dedicated support'],
+      color: '#a855f7'
     }
   }
 
@@ -60,8 +74,11 @@ export function ModelsPanel() {
       setIsLoading(true)
       await new Promise(resolve => setTimeout(resolve, 2000))
       
+      // Map ULTIMATE to BEAST for now since auth context only supports those 3 plans
+      const planToUpdate = selectedPlan === 'ULTIMATE' ? 'BEAST' : selectedPlan
+      
       // Update user plan in context
-      await updatePlan(selectedPlan)
+      await updatePlan(planToUpdate)
       setShowUpgradeModal(false)
       
       // Show success feedback
@@ -124,14 +141,14 @@ export function ModelsPanel() {
       </div>
 
       {/* Current Plan & Usage */}
-      {user && (
+      {user && planDetails[user.plan] && (
         <div className="current-plan-card">
           <div className="plan-header">
             <div className="plan-info">
               {planDetails[user.plan].icon}
               <div>
                 <h4>{planDetails[user.plan].name} Plan</h4>
-                <p>{planDetails[user.plan].price}</p>
+                <p>${billingCycle === 'monthly' ? planDetails[user.plan].monthlyPrice : Math.floor(planDetails[user.plan].yearlyPrice / 12)}/month</p>
               </div>
             </div>
           </div>
@@ -244,6 +261,23 @@ export function ModelsPanel() {
             <h3>🚀 Upgrade Your Plan</h3>
             <p>Unlock more powerful AI models and advanced features</p>
 
+            {/* Billing Toggle */}
+            <div className="billing-toggle">
+              <button
+                className={`billing-option ${billingCycle === 'monthly' ? 'active' : ''}`}
+                onClick={() => setBillingCycle('monthly')}
+              >
+                Monthly
+              </button>
+              <button
+                className={`billing-option ${billingCycle === 'yearly' ? 'active' : ''}`}
+                onClick={() => setBillingCycle('yearly')}
+              >
+                Yearly
+                <span className="discount-badge">Save 17%</span>
+              </button>
+            </div>
+
             <div className="plans-comparison">
               {Object.entries(planDetails).map(([key, plan]) => (
                 <div 
@@ -252,14 +286,25 @@ export function ModelsPanel() {
                   onClick={() => setSelectedPlan(key as any)}
                 >
                   <div className="plan-header">
-                    {plan.icon}
-                    <div>
-                      <h4>{plan.name}</h4>
-                      <p>{plan.price}</p>
-                    </div>
+                    {billingCycle === 'monthly' ? (
+                      <div>
+                        <h4>{plan.icon} {plan.name}</h4>
+                        <p>${plan.monthlyPrice}/month</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <h4>{plan.icon} {plan.name}</h4>
+                        <p>${Math.floor(plan.yearlyPrice / 12)}/month</p>
+                        <span className="yearly-note">Billed ${plan.yearlyPrice} annually</span>
+                      </div>
+                    )}
                     {selectedPlan === key && <Check size={16} />}
                   </div>
                   <div className="plan-features">
+                    <div className="feature-highlight">
+                      <Zap size={16} />
+                      <strong>{plan.tokens}</strong>
+                    </div>
                     {plan.features.map(feature => (
                       <div key={feature} className="feature-item">
                         <Check size={12} />
@@ -273,17 +318,17 @@ export function ModelsPanel() {
 
             <div className="modal-footer">
               <button 
-                className="secondary-button"
-                onClick={() => setShowUpgradeModal(false)}
-              >
-                Cancel
-              </button>
-              <button 
                 className="gradient-button"
                 onClick={handleUpgrade}
                 disabled={isLoading}
               >
                 {isLoading ? 'Processing...' : `Upgrade to ${planDetails[selectedPlan].name}`}
+              </button>
+              <button 
+                className="secondary-button"
+                onClick={() => setShowUpgradeModal(false)}
+              >
+                Cancel
               </button>
             </div>
           </div>

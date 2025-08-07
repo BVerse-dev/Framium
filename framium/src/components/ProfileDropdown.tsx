@@ -81,6 +81,7 @@ export function ProfileDropdown({ isOpen, onClose, onNavigateToSettings }: Profi
           </button>
           
           <button className="profile-menu-item danger" onClick={() => {
+            console.log('ProfileDropdown logout button clicked')
             onClose()
             logout()
           }}>

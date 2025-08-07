@@ -62,14 +62,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  // Reset form when modal opens or mode changes
+  // Sync mode with initialMode prop
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
+
+  // Reset form and mode when modal opens
   useEffect(() => {
     if (isOpen) {
+      setMode(initialMode); // Reset mode to requested mode when opening
       setFormData({ email: '', password: '', name: '', confirmPassword: '' });
       setErrors({});
       setShowPassword(false);
     }
-  }, [isOpen, mode]);
+  }, [isOpen, initialMode]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -241,7 +247,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
           <button
             type="submit"
             disabled={isLoading}
-            className={`auth-submit-button ${initialMode === 'signup' ? 'signup' : ''}`}
+            className={`auth-submit-button ${mode === 'signup' ? 'signup' : ''}`}
           >
             {isLoading ? (
               <div className="auth-loading">

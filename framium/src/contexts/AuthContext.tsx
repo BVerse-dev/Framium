@@ -152,10 +152,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const logout = async () => {
+  const logout = () => {
+    console.log('Logout function called')
     try {
-      await auth.signOut()
+      // Clear user state immediately
       setUser(null)
+      
+      // Then handle Supabase logout asynchronously
+      auth.signOut().then(({ error }) => {
+        if (error) {
+          console.error('Supabase logout error:', error)
+        } else {
+          console.log('Supabase logout successful')
+        }
+      }).catch(err => {
+        console.error('Logout promise failed:', err)
+      })
+      
     } catch (error) {
       console.error('Logout failed:', error)
     }

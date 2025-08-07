@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LogOut, User, Shield, Palette, Code, HelpCircle, ExternalLink, Save } from 'lucide-react'
+import { LogOut, User, Shield, Palette, Code, HelpCircle, ExternalLink, Save, Crown, Zap, Check } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useModel } from '../contexts/ModelContext'
 
@@ -8,9 +8,10 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ onOpenAuth }: SettingsPanelProps) {
-  const { user, logout } = useAuth()
+  const { user, logout, updatePlan } = useAuth()
   const { mode, setMode } = useModel()
-  const [activeTab, setActiveTab] = useState<'account' | 'preferences' | 'about'>('account')
+  const [activeTab, setActiveTab] = useState<'account' | 'preferences' | 'upgrade' | 'about'>('account')
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [preferences, setPreferences] = useState({
     theme: 'dark',
     notifications: true,
@@ -72,7 +73,30 @@ export function SettingsPanel({ onOpenAuth }: SettingsPanelProps) {
     alert('✅ Password changed successfully!')
   }
 
+  const handleUpgrade = async (planId: string) => {
+    try {
+      const planMap = {
+        'basic': 'BASIC' as const,
+        'max': 'MAX' as const, 
+        'beast': 'BEAST' as const,
+        'ultimate': 'BEAST' as const // Ultimate maps to BEAST for now
+      }
+      
+      const planType = planMap[planId as keyof typeof planMap]
+      if (planType) {
+        await updatePlan(planType)
+        alert('✅ Plan upgraded successfully!')
+      } else {
+        alert('💬 Contact sales for Ultimate plan upgrade')
+      }
+    } catch (error) {
+      console.error('Upgrade failed:', error)
+      alert('❌ Upgrade failed. Please try again.')
+    }
+  }
+
   const handleLogout = () => {
+    console.log('SettingsPanel logout button clicked')
     logout()
     setShowLogoutConfirm(false)
   }
@@ -80,7 +104,90 @@ export function SettingsPanel({ onOpenAuth }: SettingsPanelProps) {
   const tabs = [
     { id: 'account', label: 'Account', icon: User },
     { id: 'preferences', label: 'Preferences', icon: Palette },
+    { id: 'upgrade', label: 'Upgrade', icon: Crown },
     { id: 'about', label: 'About', icon: HelpCircle }
+  ]
+
+  // Pricing plans data
+  const plans = [
+    {
+      id: 'basic',
+      name: 'Basic',
+      description: 'Perfect for getting started',
+      monthlyPrice: 9,
+      yearlyPrice: 90,
+      tokens: '50K',
+      features: [
+        'Basic AI models',
+        'Standard components',
+        'Email support',
+        'Basic templates',
+        '1,000 requests/month'
+      ],
+      buttonText: user?.plan === 'BASIC' ? 'Current Plan' : 'Upgrade to Basic',
+      popular: false,
+      disabled: user?.plan === 'BASIC'
+    },
+    {
+      id: 'max',
+      name: 'Max',
+      description: 'Perfect for professionals and teams',
+      monthlyPrice: 29,
+      yearlyPrice: 290,
+      tokens: '250K',
+      features: [
+        'Advanced AI models',
+        'Premium components',
+        'Priority support',
+        'Custom templates',
+        '10,000 requests/month',
+        'Real-time collaboration'
+      ],
+      buttonText: user?.plan === 'MAX' ? 'Current Plan' : 'Upgrade to Max',
+      popular: true,
+      disabled: user?.plan === 'MAX'
+    },
+    {
+      id: 'beast',
+      name: 'Beast',
+      description: 'Unleash the full power of AI',
+      monthlyPrice: 79,
+      yearlyPrice: 790,
+      tokens: '1M',
+      features: [
+        'All Max features',
+        'Unlimited tokens',
+        'Advanced model control',
+        'Custom AI training',
+        'Dedicated support',
+        'Advanced animations',
+        'Team management'
+      ],
+      buttonText: user?.plan === 'BEAST' ? 'Current Plan' : 'Upgrade to Beast',
+      popular: false,
+      disabled: user?.plan === 'BEAST'
+    },
+    {
+      id: 'ultimate',
+      name: 'Ultimate',
+      description: 'Enterprise-grade AI with unlimited access',
+      monthlyPrice: 199,
+      yearlyPrice: 1990,
+      tokens: 'Unlimited',
+      features: [
+        'All Beast features',
+        'Unlimited everything',
+        'Custom model training',
+        'Advanced model control',
+        'White-label options',
+        'Custom integrations',
+        'SSO authentication',
+        '24/7 dedicated support'
+      ],
+      buttonText: 'Upgrade to Ultimate',
+      popular: false,
+      disabled: false
+    }
   ]
 
   return (
@@ -272,6 +379,92 @@ export function SettingsPanel({ onOpenAuth }: SettingsPanelProps) {
             >
               <Save size={14} />
               Save Preferences
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Tab */}
+      {activeTab === 'upgrade' && (
+        <div className="settings-content">
+          <div className="upgrade-header">
+            <h3>Choose Your Plan</h3>
+            <p>Unlock more features and higher usage limits</p>
+            
+            {/* Billing Toggle */}
+            <div className="billing-toggle">
+              <button
+                className={`billing-option ${billingCycle === 'monthly' ? 'active' : ''}`}
+                onClick={() => setBillingCycle('monthly')}
+              >
+                Monthly
+              </button>
+              <button
+                className={`billing-option ${billingCycle === 'yearly' ? 'active' : ''}`}
+                onClick={() => setBillingCycle('yearly')}
+              >
+                Yearly
+                <span className="discount-badge">Save 17%</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="pricing-grid">
+            {plans.map((plan) => (
+              <div 
+                key={plan.id} 
+                className={`pricing-card ${plan.popular ? 'popular' : ''} ${plan.disabled ? 'current' : ''}`}
+              >
+                {plan.popular && <div className="popular-badge">Most Popular</div>}
+                
+                <div className="plan-header">
+                  <h4>{plan.name}</h4>
+                  <p className="plan-description">{plan.description}</p>
+                  <div className="plan-price">
+                    <span className="price">
+                      ${billingCycle === 'monthly' ? plan.monthlyPrice : Math.floor(plan.yearlyPrice / 12)}
+                    </span>
+                    <span className="period">/{billingCycle === 'monthly' ? 'month' : 'month'}</span>
+                  </div>
+                  {billingCycle === 'yearly' && plan.yearlyPrice > 0 && (
+                    <p className="yearly-note">
+                      Billed ${plan.yearlyPrice} annually
+                    </p>
+                  )}
+                </div>
+
+                <div className="plan-features">
+                  <div className="feature-highlight">
+                    <Zap size={16} />
+                    <strong>{plan.tokens} tokens/month</strong>
+                  </div>
+                  <ul>
+                    {plan.features.map((feature, index) => (
+                      <li key={index}>
+                        <Check size={16} />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <button 
+                  className={`plan-button ${plan.popular ? 'gradient-button' : 'secondary-button'} ${plan.disabled ? 'current-plan' : ''}`}
+                  disabled={plan.disabled}
+                  onClick={() => !plan.disabled && handleUpgrade(plan.id)}
+                >
+                  {plan.buttonText}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="upgrade-footer">
+            <p>
+              <strong>Need a custom solution?</strong> Contact our sales team for enterprise pricing.
+            </p>
+            <button className="contact-sales-button">
+              Contact Sales
             </button>
           </div>
         </div>
