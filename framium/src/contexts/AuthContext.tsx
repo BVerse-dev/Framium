@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { auth, db } from '../lib/supabase'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 export interface User {
   id: string
@@ -31,159 +33,174 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Load user data from Supabase user profile
+  const loadUserData = async (supabaseUser: SupabaseUser) => {
+    try {
+      // Get user profile from database
+      const { data: userProfile, error: profileError } = await db.users.getById(supabaseUser.id)
+      
+      if (profileError || !userProfile) {
+        console.error('Failed to load user profile:', profileError)
+        return null
+      }
+
+      // Get user usage stats
+      const { data: usageData } = await db.tokenUsage.getUserMonthlyUsage(supabaseUser.id)
+      const usage = usageData?.[0] || { total_tokens: 0, total_cost: 0, current_plan: 'BASIC' }
+
+      // Map plan limits
+      const planLimits = {
+        BASIC: { maxTokens: 50000, maxRequests: 1000 },
+        MAX: { maxTokens: 250000, maxRequests: 10000 },
+        BEAST: { maxTokens: 1000000, maxRequests: 50000 }
+      }
+
+      const plan = (userProfile.plan?.toUpperCase() || 'BASIC') as 'BASIC' | 'MAX' | 'BEAST'
+      const limits = planLimits[plan]
+
+      const mappedUser: User = {
+        id: userProfile.id,
+        email: userProfile.email,
+        name: userProfile.name,
+        plan,
+        tokensUsed: usage.total_tokens || 0,
+        tokensLimit: limits.maxTokens,
+        avatar: userProfile.avatar_url || undefined,
+        usage: {
+          requests: 0, // Would need to track this separately
+          tokens: usage.total_tokens || 0,
+          maxRequests: limits.maxRequests,
+          maxTokens: limits.maxTokens
+        }
+      }
+
+      return mappedUser
+    } catch (error) {
+      console.error('Error loading user data:', error)
+      return null
+    }
+  }
+
   useEffect(() => {
     // Check for existing session on startup
     const checkAuth = async () => {
       try {
-        // Check localStorage for persisted session
-        const savedUser = localStorage.getItem('framium-user')
-        const sessionToken = localStorage.getItem('framium-session')
+        const { session } = await auth.getSession()
         
-        if (savedUser && sessionToken) {
-          // Validate session token (in production, check with API)
-          const user = JSON.parse(savedUser)
-          
-          // TODO: Validate session with backend API
-          // const isValidSession = await api.validateSession(sessionToken)
-          const isValidSession = true // Mock validation
-          
-          if (isValidSession) {
-            setUser(user)
-          } else {
-            // Invalid session, clear localStorage
-            localStorage.removeItem('framium-user')
-            localStorage.removeItem('framium-session')
-          }
-        } else {
-          // For demo purposes, create a demo user
-          const mockUser: User = {
-            id: 'demo-user-1',
-            email: 'demo@framium.dev',
-            name: 'Demo User',
-            plan: 'MAX',
-            tokensUsed: 45000,
-            tokensLimit: 250000,
-            avatar: undefined,
-            usage: {
-              requests: 1247,
-              tokens: 45000,
-              maxRequests: 10000,
-              maxTokens: 250000
-            }
-          }
-          setUser(mockUser)
-          
-          // Persist demo user
-          localStorage.setItem('framium-user', JSON.stringify(mockUser))
-          localStorage.setItem('framium-session', 'demo-session-token')
+        if (session?.user) {
+          const userData = await loadUserData(session.user)
+          setUser(userData)
         }
       } catch (error) {
         console.error('Auth check failed:', error)
-        // Clear any corrupted data
-        localStorage.removeItem('framium-user')
-        localStorage.removeItem('framium-session')
       } finally {
         setIsLoading(false)
       }
     }
 
     checkAuth()
+
+    // Listen for auth changes
+    const { data: { subscription } } = auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const userData = await loadUserData(session.user)
+        setUser(userData)
+      } else {
+        setUser(null)
+      }
+      setIsLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const login = async (email: string, _password: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      // TODO: Replace with real API call
-      // const response = await api.login(email, password)
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const { data, error } = await auth.signIn(email, password)
       
-      const user: User = {
-        id: 'user-' + Date.now(),
-        email,
-        name: email.split('@')[0],
-        plan: 'BASIC',
-        tokensUsed: 0,
-        tokensLimit: 50000,
-        usage: {
-          requests: 0,
-          tokens: 0,
-          maxRequests: 1000,
-          maxTokens: 50000
-        }
+      if (error) {
+        throw new Error(error.message)
       }
-      
-      // Persist user session
-      localStorage.setItem('framium-user', JSON.stringify(user))
-      localStorage.setItem('framium-session', 'session-' + Date.now())
-      
-      setUser(user)
+
+      if (data.user) {
+        const userData = await loadUserData(data.user)
+        setUser(userData)
+      }
     } catch (error) {
-      throw new Error('Login failed')
+      throw error
     } finally {
       setIsLoading(false)
     }
   }
 
-  const signup = async (email: string, _password: string, name: string) => {
+  const signup = async (email: string, password: string, name: string) => {
     setIsLoading(true)
     try {
-      // TODO: Replace with real API call
-      // const response = await api.signup(email, password, name)
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const { error } = await auth.signUp(email, password, name)
       
-      const user: User = {
-        id: 'user-' + Date.now(),
-        email,
-        name,
-        plan: 'BASIC',
-        tokensUsed: 0,
-        tokensLimit: 50000,
-        usage: {
-          requests: 0,
-          tokens: 0,
-          maxRequests: 1000,
-          maxTokens: 50000
-        }
+      if (error) {
+        throw new Error(error.message)
       }
-      
-      // Persist user session
-      localStorage.setItem('framium-user', JSON.stringify(user))
-      localStorage.setItem('framium-session', 'session-' + Date.now())
-      
-      setUser(user)
+
+      // User will be created automatically via the database trigger
+      // Just set loading to false, the auth state change will handle the rest
     } catch (error) {
-      throw new Error('Signup failed')
+      throw error
     } finally {
       setIsLoading(false)
     }
   }
 
-  const logout = () => {
-    setUser(null)
-    // Clear persisted session
-    localStorage.removeItem('framium-user')
-    localStorage.removeItem('framium-session')
+  const logout = async () => {
+    try {
+      await auth.signOut()
+      setUser(null)
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
   }
 
   const updatePlan = async (plan: 'BASIC' | 'MAX' | 'BEAST') => {
     if (!user) return
     
-    const tokenLimits = {
-      BASIC: 50000,
-      MAX: 250000,
-      BEAST: 1000000
+    try {
+      // Update plan in database
+      const { error } = await db.users.update(user.id, { plan: plan.toLowerCase() })
+      
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      // Update local user state
+      const tokenLimits = {
+        BASIC: 50000,
+        MAX: 250000,
+        BEAST: 1000000
+      }
+      
+      const requestLimits = {
+        BASIC: 1000,
+        MAX: 10000,
+        BEAST: 50000
+      }
+
+      const updatedUser = {
+        ...user,
+        plan,
+        tokensLimit: tokenLimits[plan],
+        usage: {
+          ...user.usage,
+          maxTokens: tokenLimits[plan],
+          maxRequests: requestLimits[plan]
+        }
+      }
+      
+      setUser(updatedUser)
+    } catch (error) {
+      console.error('Failed to update plan:', error)
+      throw error
     }
-    
-    const updatedUser = {
-      ...user,
-      plan,
-      tokensLimit: tokenLimits[plan]
-    }
-    
-    setUser(updatedUser)
-    
-    // Persist updated user
-    localStorage.setItem('framium-user', JSON.stringify(updatedUser))
   }
 
   return (

@@ -3,6 +3,7 @@ import { Send, Check, Edit3, RotateCcw, Save, Sparkles, Image, Target, Box, Laye
 import { framer, CanvasNode } from 'framer-plugin'
 import { useAuth } from '../contexts/AuthContext'
 import { useModel } from '../contexts/ModelContext'
+import { APIService } from '../lib/api'
 
 interface Message {
   id: string
@@ -200,13 +201,19 @@ export function ChatInterface({ selection }: ChatInterfaceProps) {
     setIsLoading(true)
 
     try {
-      // Simulate AI response with context about selection
+      // Call real API instead of simulation
+      const aiResponse = await APIService.sendChatMessage({
+        prompt: inputValue,
+        model: selectedModel.name,
+        selection: selection,
+        mode: mode
+      })
+      
+      // Add context info
       const contextInfo = selection.length > 0 ? 
         `\n\n📋 **Current Selection:** ${selection.length} item(s) selected on canvas` : 
         '\n\n📋 **Canvas:** No items currently selected'
 
-      const aiResponse = await simulateAIResponse(inputValue, selection, selectedModel.name)
-      
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
         type: 'ai',
@@ -221,13 +228,36 @@ export function ChatInterface({ selection }: ChatInterfaceProps) {
       setMessages(prev => [...prev, aiMessage])
     } catch (error) {
       console.error('Error sending message:', error)
-      const errorMessage: Message = {
-        id: `error-${Date.now()}`,
-        type: 'ai',
-        content: '❌ Sorry, there was an error processing your request. Please try again.',
-        timestamp: new Date(),
+      
+      // Fallback to simulation if API fails
+      try {
+        const fallbackResponse = await simulateAIResponse(inputValue, selection, selectedModel.name)
+        
+        const contextInfo = selection.length > 0 ? 
+          `\n\n📋 **Current Selection:** ${selection.length} item(s) selected on canvas` : 
+          '\n\n📋 **Canvas:** No items currently selected'
+
+        const aiMessage: Message = {
+          id: `ai-${Date.now()}`,
+          type: 'ai',
+          content: `⚠️ **Using Demo Mode** (API unavailable)\n\n${fallbackResponse.content}${contextInfo}`,
+          timestamp: new Date(),
+          tokens: fallbackResponse.tokens,
+          cost: fallbackResponse.cost,
+          canApplyToCanvas: fallbackResponse.canApplyToCanvas,
+          code: fallbackResponse.code,
+        }
+
+        setMessages(prev => [...prev, aiMessage])
+      } catch (fallbackError) {
+        const errorMessage: Message = {
+          id: `error-${Date.now()}`,
+          type: 'ai',
+          content: '❌ Sorry, there was an error processing your request. Please try again.',
+          timestamp: new Date(),
+        }
+        setMessages(prev => [...prev, errorMessage])
       }
-      setMessages(prev => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }

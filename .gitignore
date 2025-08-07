@@ -118,3 +118,9 @@ scripts/test-*
 *.db
 *.sqlite
 *.sqlite3
+
+# SQL files (keep local, don't push to remote)
+*.sql
+supabase-setup.sql
+schema.sql
+migrations/*.sql

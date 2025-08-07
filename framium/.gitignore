@@ -31,3 +31,9 @@ yarn-error.log\*
 # Packed plugin
 
 plugin.zip
+.vercel
+
+# SQL files (keep local, don't push to remote)
+*.sql
+schema.sql
+migrations/*.sql
