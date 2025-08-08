@@ -30,19 +30,21 @@ export function ProfileDropdown({ isOpen, onClose, onNavigateToSettings }: Profi
 
   if (!isOpen) return null
 
-  const getPlanIcon = () => {
-    switch (user?.plan) {
-      case 'BEAST': return <Crown className="gradient-icon" size={12} />
-      case 'MAX': return <Zap className="gradient-icon" size={12} />
-      default: return null
+  const getPlanIcon = (plan: string | undefined) => {
+    switch (plan) {
+      case 'Beast': return <Crown className="gradient-icon" size={12} />
+      case 'Max': return <Zap className="gradient-icon" size={12} />
+      case 'Ultimate': return <Crown className="gradient-icon" size={12} />
+      default: return <Zap className="gradient-icon" size={12} />
     }
   }
 
-  const getPlanColor = () => {
-    switch (user?.plan) {
-      case 'BEAST': return 'var(--accent-beast)'
-      case 'MAX': return 'var(--accent-primary)'
-      default: return 'var(--text-secondary)'
+  const getPlanColor = (plan: string | undefined) => {
+    switch (plan) {
+      case 'Beast': return 'var(--accent-beast)'
+      case 'Max': return 'var(--accent-primary)'
+      case 'Ultimate': return 'var(--accent-purple)'
+      default: return 'var(--accent-secondary)'
     }
   }
 
@@ -62,8 +64,8 @@ export function ProfileDropdown({ isOpen, onClose, onNavigateToSettings }: Profi
           </div>
           <div className="profile-info">
             <div className="profile-name">{user?.name || 'User'}</div>
-            <div className="profile-plan" style={{ color: getPlanColor() }}>
-              {getPlanIcon()}
+            <div className="profile-plan" style={{ color: getPlanColor(user?.plan) }}>
+              {getPlanIcon(user?.plan)}
               {user?.plan || 'BASIC'} Plan
             </div>
           </div>
@@ -116,8 +118,9 @@ export function ProfileButton({ onNavigateToSettings }: { onNavigateToSettings?:
 
   const getPlanColor = () => {
     switch (user?.plan) {
-      case 'BEAST': return 'var(--accent-beast)'
-      case 'MAX': return 'var(--accent-primary)'
+      case 'Beast': return 'var(--accent-beast)'
+      case 'Max': return 'var(--accent-primary)'
+      case 'Ultimate': return 'var(--accent-purple)'
       default: return 'var(--text-secondary)'
     }
   }
@@ -130,7 +133,7 @@ export function ProfileButton({ onNavigateToSettings }: { onNavigateToSettings?:
         style={{ borderColor: getPlanColor() }}
       >
         <User size={18} />
-        {user?.plan && user.plan !== 'BASIC' && (
+        {user?.plan && user.plan !== 'Basic' && (
           <div className="plan-indicator" style={{ background: getPlanColor() }} />
         )}
       </button>

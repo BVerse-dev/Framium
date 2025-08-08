@@ -6,7 +6,7 @@ export interface User {
   id: string
   email: string
   name: string
-  plan: 'BASIC' | 'MAX' | 'BEAST'
+  plan: 'Basic' | 'Max' | 'Beast' | 'Ultimate'
   tokensUsed: number
   tokensLimit: number
   avatar?: string
@@ -24,7 +24,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   logout: () => void
   signup: (email: string, password: string, name: string) => Promise<void>
-  updatePlan: (plan: 'BASIC' | 'MAX' | 'BEAST') => Promise<void>
+  updatePlan: (plan: 'Basic' | 'Max' | 'Beast' | 'Ultimate') => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -50,12 +50,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Map plan limits
       const planLimits = {
-        BASIC: { maxTokens: 50000, maxRequests: 1000 },
-        MAX: { maxTokens: 250000, maxRequests: 10000 },
-        BEAST: { maxTokens: 1000000, maxRequests: 50000 }
+        Basic: { maxTokens: 50000, maxRequests: 1000 },
+        Max: { maxTokens: 250000, maxRequests: 10000 },
+        Beast: { maxTokens: 1000000, maxRequests: 50000 },
+        Ultimate: { maxTokens: 5000000, maxRequests: 100000 }
       }
 
-      const plan = (userProfile.plan?.toUpperCase() || 'BASIC') as 'BASIC' | 'MAX' | 'BEAST'
+      const planMapping: Record<string, 'Basic' | 'Max' | 'Beast' | 'Ultimate'> = {
+        'BASIC': 'Basic',
+        'MAX': 'Max', 
+        'BEAST': 'Beast',
+        'ULTIMATE': 'Ultimate',
+        'Basic': 'Basic',
+        'Max': 'Max',
+        'Beast': 'Beast', 
+        'Ultimate': 'Ultimate'
+      }
+
+      const plan = planMapping[userProfile.plan?.toUpperCase() || 'BASIC'] || 'Basic'
       const limits = planLimits[plan]
 
       const mappedUser: User = {
@@ -174,12 +186,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const updatePlan = async (plan: 'BASIC' | 'MAX' | 'BEAST') => {
+  const updatePlan = async (plan: 'Basic' | 'Max' | 'Beast' | 'Ultimate') => {
     if (!user) return
     
     try {
-      // Update plan in database
-      const { error } = await db.users.update(user.id, { plan: plan.toLowerCase() })
+      // Update plan in database (convert to old format for DB)
+      const dbPlan = plan.toUpperCase()
+      const { error } = await db.users.update(user.id, { plan: dbPlan.toLowerCase() })
       
       if (error) {
         throw new Error(error.message)
@@ -187,15 +200,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Update local user state
       const tokenLimits = {
-        BASIC: 50000,
-        MAX: 250000,
-        BEAST: 1000000
+        Basic: 50000,
+        Max: 250000,
+        Beast: 1000000,
+        Ultimate: 5000000
       }
       
       const requestLimits = {
-        BASIC: 1000,
-        MAX: 10000,
-        BEAST: 50000
+        Basic: 1000,
+        Max: 10000,
+        Beast: 50000,
+        Ultimate: 100000
       }
 
       const updatedUser = {

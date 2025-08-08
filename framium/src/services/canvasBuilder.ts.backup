@@ -1,0 +1,307 @@
+/**
+ * Framium - Professional Canvas Builder
+ * Generates clean, simple SVG components for Framer canvas
+ * Designed to avoid complex templates that cause import errors
+ * Now uses proper permission-guarded mutations
+ */
+
+import { framer } from 'framer-plugin'
+import { mutateSVG } from './mutateCanvas'
+
+/**
+ * Professional Canvas Builder with permission-guarded operations
+ */
+export class CanvasBuilder {
+  
+  /**
+   * Add SVG component to canvas with proper permission checking
+   */
+  static async addSVGComponent(svg: string, name: string): Promise<boolean> {
+    console.log(`Adding SVG component: ${name}`)
+    
+    const result = await mutateSVG(async () => {
+      await framer.addSVG({
+        svg: svg,
+        name: `[Framium]-${name}-${Date.now()}.svg`,
+      })
+      
+      framer.notify(`✅ ${name} added to canvas`)
+      return true
+    })
+    
+    return result !== null
+  }
+
+  /**
+   * Build a professional section with clean SVG
+   */
+  static async buildSection(
+    type: 'hero' | 'features' | 'pricing' | 'testimonials' | 'cta' | 'footer',
+    options: { width?: number; height?: number } = {}
+  ): Promise<boolean> {
+    const { width = 1200, height = 600 } = options
+    
+    // Generate clean SVG based on section type
+    const svg = this.generateSectionSVG(type, width, height)
+    const name = `${type.charAt(0).toUpperCase() + type.slice(1)} Section`
+    
+    return await this.addSVGComponent(svg, name)
+  }
+
+  /**
+   * Generate clean SVG for different section types (no complex templates)
+   */
+  private static generateSectionSVG(type: string, width: number, height: number): string {
+    switch (type) {
+      case 'hero':
+        return this.createHeroSVG(width, height)
+      case 'features':
+        return this.createFeaturesSVG(width, height)
+      case 'pricing':
+        return this.createPricingSVG(width, height)
+      case 'testimonials':
+        return this.createTestimonialsSVG(width, height)
+      case 'cta':
+        return this.createCTASVG(width, height)
+      case 'footer':
+        return this.createFooterSVG(width, height)
+      default:
+        return this.createHeroSVG(width, height)
+    }
+  }
+
+  /**
+   * Clean Hero section SVG (simple rectangles and text only)
+   */
+  private static createHeroSVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#4f46e5" rx="16"/>
+  <rect x="64" y="64" width="${width-128}" height="${height-128}" fill="#ffffff" rx="12"/>
+  <text x="${width/2}" y="${height/2 - 20}" text-anchor="middle" fill="#1e293b" font-family="Inter" font-size="32" font-weight="bold">Hero Section</text>
+  <text x="${width/2}" y="${height/2 + 20}" text-anchor="middle" fill="#64748b" font-family="Inter" font-size="16">Professional hero layout</text>
+  <rect x="${width/2 - 60}" y="${height/2 + 50}" width="120" height="40" fill="#4f46e5" rx="8"/>
+  <text x="${width/2}" y="${height/2 + 75}" text-anchor="middle" fill="#ffffff" font-family="Inter" font-size="14">Get Started</text>
+</svg>`
+  }
+
+  /**
+   * Clean Features section SVG
+   */
+  private static createFeaturesSVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#f8fafc" rx="16"/>
+  <text x="${width/2}" y="80" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="24" font-weight="bold">Features</text>
+  <rect x="100" y="140" width="300" height="200" fill="#ffffff" stroke="#e5e7eb" rx="12"/>
+  <text x="250" y="240" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="16">Feature 1</text>
+  <rect x="450" y="140" width="300" height="200" fill="#ffffff" stroke="#e5e7eb" rx="12"/>
+  <text x="600" y="240" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="16">Feature 2</text>
+  <rect x="800" y="140" width="300" height="200" fill="#ffffff" stroke="#e5e7eb" rx="12"/>
+  <text x="950" y="240" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="16">Feature 3</text>
+</svg>`
+  }
+
+  /**
+   * Clean Pricing section SVG
+   */
+  private static createPricingSVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#ffffff" rx="16"/>
+  <text x="${width/2}" y="80" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="24" font-weight="bold">Pricing Plans</text>
+  <rect x="200" y="140" width="250" height="300" fill="#ffffff" stroke="#e5e7eb" rx="16"/>
+  <text x="325" y="200" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="18" font-weight="bold">Basic Plan</text>
+  <text x="325" y="240" text-anchor="middle" fill="#3b82f6" font-family="Inter" font-size="32" font-weight="bold">$9</text>
+  <rect x="500" y="140" width="250" height="300" fill="#3b82f6" stroke="#3b82f6" rx="16"/>
+  <text x="625" y="200" text-anchor="middle" fill="#ffffff" font-family="Inter" font-size="18" font-weight="bold">Pro Plan</text>
+  <text x="625" y="240" text-anchor="middle" fill="#ffffff" font-family="Inter" font-size="32" font-weight="bold">$29</text>
+  <rect x="800" y="140" width="250" height="300" fill="#ffffff" stroke="#e5e7eb" rx="16"/>
+  <text x="925" y="200" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="18" font-weight="bold">Enterprise</text>
+  <text x="925" y="240" text-anchor="middle" fill="#3b82f6" font-family="Inter" font-size="32" font-weight="bold">$99</text>
+</svg>`
+  }
+
+  /**
+   * Clean Testimonials section SVG
+   */
+  private static createTestimonialsSVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#f1f5f9" rx="16"/>
+  <text x="${width/2}" y="80" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="24" font-weight="bold">Testimonials</text>
+  <rect x="150" y="140" width="350" height="200" fill="#ffffff" stroke="#e5e7eb" rx="12"/>
+  <text x="325" y="220" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="14">Great product!</text>
+  <text x="325" y="260" text-anchor="middle" fill="#64748b" font-family="Inter" font-size="12">- Customer 1</text>
+  <rect x="550" y="140" width="350" height="200" fill="#ffffff" stroke="#e5e7eb" rx="12"/>
+  <text x="725" y="220" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="14">Amazing service!</text>
+  <text x="725" y="260" text-anchor="middle" fill="#64748b" font-family="Inter" font-size="12">- Customer 2</text>
+</svg>`
+  }
+
+  /**
+   * Clean CTA section SVG
+   */
+  private static createCTASVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#1e293b" rx="16"/>
+  <text x="${width/2}" y="${height/2 - 40}" text-anchor="middle" fill="#ffffff" font-family="Inter" font-size="28" font-weight="bold">Ready to Get Started?</text>
+  <text x="${width/2}" y="${height/2}" text-anchor="middle" fill="#cbd5e1" font-family="Inter" font-size="16">Join thousands of satisfied customers</text>
+  <rect x="${width/2 - 80}" y="${height/2 + 30}" width="160" height="48" fill="#4f46e5" rx="8"/>
+  <text x="${width/2}" y="${height/2 + 58}" text-anchor="middle" fill="#ffffff" font-family="Inter" font-size="16" font-weight="bold">Get Started Now</text>
+</svg>`
+  }
+
+  /**
+   * Clean Footer section SVG
+   */
+  private static createFooterSVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#374151" rx="16"/>
+  <text x="100" y="100" fill="#ffffff" font-family="Inter" font-size="20" font-weight="bold">Company Name</text>
+  <text x="100" y="140" fill="#d1d5db" font-family="Inter" font-size="14">About</text>
+  <text x="100" y="170" fill="#d1d5db" font-family="Inter" font-size="14">Contact</text>
+  <text x="100" y="200" fill="#d1d5db" font-family="Inter" font-size="14">Privacy</text>
+  <text x="400" y="100" fill="#ffffff" font-family="Inter" font-size="16" font-weight="bold">Products</text>
+  <text x="400" y="140" fill="#d1d5db" font-family="Inter" font-size="14">Service 1</text>
+  <text x="400" y="170" fill="#d1d5db" font-family="Inter" font-size="14">Service 2</text>
+  <text x="700" y="100" fill="#ffffff" font-family="Inter" font-size="16" font-weight="bold">Support</text>
+  <text x="700" y="140" fill="#d1d5db" font-family="Inter" font-size="14">Help Center</text>
+  <text x="700" y="170" fill="#d1d5db" font-family="Inter" font-size="14">Documentation</text>
+  <text x="${width/2}" y="${height - 40}" text-anchor="middle" fill="#9ca3af" font-family="Inter" font-size="12">© 2024 Company Name. All rights reserved.</text>
+</svg>`
+  }
+}
+
+  /**
+   * Build a professional section with clean SVG
+   */
+  static async buildSection(
+    type: 'hero' | 'features' | 'pricing' | 'testimonials' | 'cta' | 'footer',
+    options: { width?: number; height?: number } = {}
+  ): Promise<boolean> {
+    const { width = 1200, height = 600 } = options
+    
+    // Generate clean SVG based on section type
+    const svg = this.generateSectionSVG(type, width, height)
+    const name = `${type.charAt(0).toUpperCase() + type.slice(1)} Section`
+    
+    return await this.addSVGComponent(svg, name)
+  }
+
+  /**
+   * Generate clean SVG for different section types (no complex templates)
+   */
+  private static generateSectionSVG(type: string, width: number, height: number): string {
+    switch (type) {
+      case 'hero':
+        return this.createHeroSVG(width, height)
+      case 'features':
+        return this.createFeaturesSVG(width, height)
+      case 'pricing':
+        return this.createPricingSVG(width, height)
+      case 'testimonials':
+        return this.createTestimonialsSVG(width, height)
+      case 'cta':
+        return this.createCTASVG(width, height)
+      case 'footer':
+        return this.createFooterSVG(width, height)
+      default:
+        return this.createHeroSVG(width, height)
+    }
+  }
+
+  /**
+   * Clean Hero section SVG (simple rectangles and text only)
+   */
+  private static createHeroSVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#4f46e5" rx="16"/>
+  <rect x="64" y="64" width="${width-128}" height="${height-128}" fill="#ffffff" rx="12"/>
+  <text x="${width/2}" y="${height/2 - 20}" text-anchor="middle" fill="#1e293b" font-family="Inter" font-size="32" font-weight="bold">Hero Section</text>
+  <text x="${width/2}" y="${height/2 + 20}" text-anchor="middle" fill="#64748b" font-family="Inter" font-size="16">Professional hero layout</text>
+  <rect x="${width/2 - 60}" y="${height/2 + 50}" width="120" height="40" fill="#4f46e5" rx="8"/>
+  <text x="${width/2}" y="${height/2 + 75}" text-anchor="middle" fill="#ffffff" font-family="Inter" font-size="14">Get Started</text>
+</svg>`
+  }
+
+  /**
+   * Clean Features section SVG
+   */
+  private static createFeaturesSVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#f8fafc" rx="16"/>
+  <text x="${width/2}" y="80" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="24" font-weight="bold">Features</text>
+  <rect x="100" y="140" width="300" height="200" fill="#ffffff" stroke="#e5e7eb" rx="12"/>
+  <text x="250" y="240" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="16">Feature 1</text>
+  <rect x="450" y="140" width="300" height="200" fill="#ffffff" stroke="#e5e7eb" rx="12"/>
+  <text x="600" y="240" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="16">Feature 2</text>
+  <rect x="800" y="140" width="300" height="200" fill="#ffffff" stroke="#e5e7eb" rx="12"/>
+  <text x="950" y="240" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="16">Feature 3</text>
+</svg>`
+  }
+
+  /**
+   * Clean Pricing section SVG
+   */
+  private static createPricingSVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#ffffff" rx="16"/>
+  <text x="${width/2}" y="80" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="24" font-weight="bold">Pricing Plans</text>
+  <rect x="200" y="140" width="250" height="300" fill="#ffffff" stroke="#e5e7eb" rx="16"/>
+  <text x="325" y="200" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="18" font-weight="bold">Basic Plan</text>
+  <text x="325" y="240" text-anchor="middle" fill="#3b82f6" font-family="Inter" font-size="32" font-weight="bold">$9</text>
+  <rect x="500" y="140" width="250" height="300" fill="#3b82f6" stroke="#3b82f6" rx="16"/>
+  <text x="625" y="200" text-anchor="middle" fill="#ffffff" font-family="Inter" font-size="18" font-weight="bold">Pro Plan</text>
+  <text x="625" y="240" text-anchor="middle" fill="#ffffff" font-family="Inter" font-size="32" font-weight="bold">$29</text>
+  <rect x="800" y="140" width="250" height="300" fill="#ffffff" stroke="#e5e7eb" rx="16"/>
+  <text x="925" y="200" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="18" font-weight="bold">Enterprise</text>
+  <text x="925" y="240" text-anchor="middle" fill="#3b82f6" font-family="Inter" font-size="32" font-weight="bold">$99</text>
+</svg>`
+  }
+
+  /**
+   * Clean Testimonials section SVG
+   */
+  private static createTestimonialsSVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#f1f5f9" rx="16"/>
+  <text x="${width/2}" y="80" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="24" font-weight="bold">Testimonials</text>
+  <rect x="150" y="140" width="350" height="200" fill="#ffffff" stroke="#e5e7eb" rx="12"/>
+  <text x="325" y="220" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="14">Great product!</text>
+  <text x="325" y="260" text-anchor="middle" fill="#64748b" font-family="Inter" font-size="12">- Customer 1</text>
+  <rect x="550" y="140" width="350" height="200" fill="#ffffff" stroke="#e5e7eb" rx="12"/>
+  <text x="725" y="220" text-anchor="middle" fill="#1f2937" font-family="Inter" font-size="14">Amazing service!</text>
+  <text x="725" y="260" text-anchor="middle" fill="#64748b" font-family="Inter" font-size="12">- Customer 2</text>
+</svg>`
+  }
+
+  /**
+   * Clean CTA section SVG
+   */
+  private static createCTASVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#1e293b" rx="16"/>
+  <text x="${width/2}" y="${height/2 - 40}" text-anchor="middle" fill="#ffffff" font-family="Inter" font-size="28" font-weight="bold">Ready to Get Started?</text>
+  <text x="${width/2}" y="${height/2}" text-anchor="middle" fill="#cbd5e1" font-family="Inter" font-size="16">Join thousands of satisfied customers</text>
+  <rect x="${width/2 - 80}" y="${height/2 + 30}" width="160" height="48" fill="#4f46e5" rx="8"/>
+  <text x="${width/2}" y="${height/2 + 58}" text-anchor="middle" fill="#ffffff" font-family="Inter" font-size="16" font-weight="bold">Get Started Now</text>
+</svg>`
+  }
+
+  /**
+   * Clean Footer section SVG
+   */
+  private static createFooterSVG(width: number, height: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="#374151" rx="16"/>
+  <text x="100" y="100" fill="#ffffff" font-family="Inter" font-size="20" font-weight="bold">Company Name</text>
+  <text x="100" y="140" fill="#d1d5db" font-family="Inter" font-size="14">About</text>
+  <text x="100" y="170" fill="#d1d5db" font-family="Inter" font-size="14">Contact</text>
+  <text x="100" y="200" fill="#d1d5db" font-family="Inter" font-size="14">Privacy</text>
+  <text x="400" y="100" fill="#ffffff" font-family="Inter" font-size="16" font-weight="bold">Products</text>
+  <text x="400" y="140" fill="#d1d5db" font-family="Inter" font-size="14">Service 1</text>
+  <text x="400" y="170" fill="#d1d5db" font-family="Inter" font-size="14">Service 2</text>
+  <text x="700" y="100" fill="#ffffff" font-family="Inter" font-size="16" font-weight="bold">Support</text>
+  <text x="700" y="140" fill="#d1d5db" font-family="Inter" font-size="14">Help Center</text>
+  <text x="700" y="170" fill="#d1d5db" font-family="Inter" font-size="14">Documentation</text>
+  <text x="${width/2}" y="${height - 40}" text-anchor="middle" fill="#9ca3af" font-family="Inter" font-size="12">© 2024 Company Name. All rights reserved.</text>
+</svg>`
+  }
+}

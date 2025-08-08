@@ -1,10 +1,10 @@
-import { MessageCircle, Brain, Compass, FolderOpen, Settings } from 'lucide-react'
+import { MessageCircle, Brain, Compass, FolderOpen, Settings, Zap } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { ProfileButton } from './ProfileDropdown'
 
 interface SidebarProps {
-  activePage: 'chat' | 'tasks' | 'models' | 'project' | 'settings'
-  setActivePage: (page: 'chat' | 'tasks' | 'models' | 'project' | 'settings') => void
+  activePage: 'chat' | 'rules' | 'tasks' | 'models' | 'project' | 'settings'
+  setActivePage: (page: 'chat' | 'rules' | 'tasks' | 'models' | 'project' | 'settings') => void
   selectionCount: number
 }
 
@@ -13,6 +13,7 @@ export function Sidebar({ activePage, setActivePage, selectionCount }: SidebarPr
 
   const menuItems = [
     { id: 'chat', icon: MessageCircle, label: 'Chat' },
+    { id: 'rules', icon: Zap, label: 'Rules & Workflow' },
     { id: 'tasks', icon: Brain, label: 'AI Tasks' },
     { id: 'models', icon: Compass, label: 'Models' },
     { id: 'project', icon: FolderOpen, label: 'Project' },
@@ -25,9 +26,10 @@ export function Sidebar({ activePage, setActivePage, selectionCount }: SidebarPr
   const getPlanIcon = () => {
     if (!user) return '⚡'
     switch (user.plan) {
-      case 'BASIC': return '⚡'
-      case 'MAX': return '🚀'
-      case 'BEAST': return '🔥'
+      case 'Basic': return '⚡'
+      case 'Max': return '🚀'
+      case 'Beast': return '🔥'
+      case 'Ultimate': return '👑'
       default: return '⚡'
     }
   }
@@ -64,11 +66,13 @@ export function Sidebar({ activePage, setActivePage, selectionCount }: SidebarPr
             title={`${user.plan} Plan - Click to upgrade - ${user.usage.tokens.toLocaleString()}/${user.usage.maxTokens.toLocaleString()} tokens`}
             style={{ 
               fontSize: 16,
-              background: user.plan === 'BEAST' ? 'rgba(245, 158, 11, 0.2)' : 
-                         user.plan === 'MAX' ? 'rgba(99, 102, 241, 0.2)' : 
+              background: user.plan === 'Beast' ? 'rgba(245, 158, 11, 0.2)' : 
+                         user.plan === 'Max' ? 'rgba(99, 102, 241, 0.2)' : 
+                         user.plan === 'Ultimate' ? 'rgba(168, 85, 247, 0.2)' :
                          'rgba(255, 255, 255, 0.1)',
-              color: user.plan === 'BEAST' ? '#f59e0b' : 
-                     user.plan === 'MAX' ? '#6366f1' : 
+              color: user.plan === 'Beast' ? '#f59e0b' : 
+                     user.plan === 'Max' ? '#6366f1' : 
+                     user.plan === 'Ultimate' ? '#a855f7' :
                      '#a0a0a0'
             }}
           >

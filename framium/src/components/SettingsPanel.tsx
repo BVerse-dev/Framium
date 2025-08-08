@@ -76,10 +76,10 @@ export function SettingsPanel({ onOpenAuth }: SettingsPanelProps) {
   const handleUpgrade = async (planId: string) => {
     try {
       const planMap = {
-        'basic': 'BASIC' as const,
-        'max': 'MAX' as const, 
-        'beast': 'BEAST' as const,
-        'ultimate': 'BEAST' as const // Ultimate maps to BEAST for now
+        'basic': 'Basic' as const,
+        'max': 'Max' as const, 
+        'beast': 'Beast' as const,
+        'ultimate': 'Ultimate' as const
       }
       
       const planType = planMap[planId as keyof typeof planMap]
@@ -87,7 +87,7 @@ export function SettingsPanel({ onOpenAuth }: SettingsPanelProps) {
         await updatePlan(planType)
         alert('✅ Plan upgraded successfully!')
       } else {
-        alert('💬 Contact sales for Ultimate plan upgrade')
+        alert('💬 Contact sales for plan upgrade')
       }
     } catch (error) {
       console.error('Upgrade failed:', error)
@@ -124,9 +124,9 @@ export function SettingsPanel({ onOpenAuth }: SettingsPanelProps) {
         'Basic templates',
         '1,000 requests/month'
       ],
-      buttonText: user?.plan === 'BASIC' ? 'Current Plan' : 'Upgrade to Basic',
+      buttonText: user?.plan === 'Basic' ? 'Current Plan' : 'Upgrade to Basic',
       popular: false,
-      disabled: user?.plan === 'BASIC'
+      disabled: user?.plan === 'Basic'
     },
     {
       id: 'max',
@@ -143,9 +143,9 @@ export function SettingsPanel({ onOpenAuth }: SettingsPanelProps) {
         '10,000 requests/month',
         'Real-time collaboration'
       ],
-      buttonText: user?.plan === 'MAX' ? 'Current Plan' : 'Upgrade to Max',
+      buttonText: user?.plan === 'Max' ? 'Current Plan' : 'Upgrade to Max',
       popular: true,
-      disabled: user?.plan === 'MAX'
+      disabled: user?.plan === 'Max'
     },
     {
       id: 'beast',
@@ -163,9 +163,9 @@ export function SettingsPanel({ onOpenAuth }: SettingsPanelProps) {
         'Advanced animations',
         'Team management'
       ],
-      buttonText: user?.plan === 'BEAST' ? 'Current Plan' : 'Upgrade to Beast',
+      buttonText: user?.plan === 'Beast' ? 'Current Plan' : 'Upgrade to Beast',
       popular: false,
-      disabled: user?.plan === 'BEAST'
+      disabled: user?.plan === 'Beast'
     },
     {
       id: 'ultimate',

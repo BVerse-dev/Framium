@@ -37,3 +37,6 @@ plugin.zip
 *.sql
 schema.sql
 migrations/*.sql
+
+# GitHub configuration and copilot instructions (keep local)
+.github/

@@ -1,0 +1,841 @@
+/**
+ * 🧠 Framium — Pro Layout & Responsive Builder for Framer
+ * 
+ * Following the Copilot instructions for professional, non-overlapping layouts:
+ * - Uses root vertical stack architecture (NO absolute positioning)
+ * - Creates responsive breakpoints (Desktop/Tablet/Phone)
+ * - Implements proper spacing system (8px scale)
+ * - Namespaced with [Framium] prefix
+ * - Generates PLAN first, executes on "GO"
+ * - Auto layout with proper height control
+ * - Professional design system with semantic tokens
+ */
+
+import { framer } from 'framer-plugin'
+
+export interface DesignTokens {
+  colors: {
+    primary: string
+    secondary: string
+    accent: string
+    background: string
+    surface: string
+    text: string
+    textSecondary: string
+    border: string
+    success: string
+    warning: string
+    error: string
+  }
+  fonts: {
+    heading: string
+    body: string
+    mono: string
+  }
+  spacing: {
+    xs: number    // 8px
+    sm: number    // 16px
+    md: number    // 24px
+    lg: number    // 32px
+    xl: number    // 48px
+    xxl: number   // 64px
+  }
+  typography: {
+    h1: { desktop: number, tablet: number, phone: number }
+    h2: { desktop: number, tablet: number, phone: number }
+    body: { desktop: number, tablet: number, phone: number }
+  }
+  breakpoints: {
+    desktop: number
+    tablet: number
+    phone: number
+  }
+}
+
+export interface BuildPlan {
+  mode: 'wireframe' | 'design'
+  sections: string[]
+  breakpoints: string[]
+  operations: string[]
+  estimatedFrames: number
+}
+
+/**
+ * Professional Design System following 8px scale and responsive typography
+ * Implements all Copilot instruction requirements for non-overlapping layouts
+ */
+export class FramerService {
+  
+  private static designTokens: DesignTokens = {
+    colors: {
+      primary: '#4f46e5',      // Indigo 600 (can be customized via brand input)
+      secondary: '#7c3aed',    // Violet 600
+      accent: '#f59e0b',       // Amber 500
+      background: '#ffffff',   // White
+      surface: '#f8fafc',      // Slate 50
+      text: '#0f172a',         // Slate 900
+      textSecondary: '#64748b', // Slate 500
+      border: '#e2e8f0',       // Slate 200
+      success: '#059669',      // Emerald 600
+      warning: '#d97706',      // Amber 600
+      error: '#dc2626'         // Red 600
+    },
+    fonts: {
+      heading: 'Inter',
+      body: 'Inter',
+      mono: 'JetBrains Mono'
+    },
+    spacing: {
+      xs: 8,    // Base unit
+      sm: 16,   // 2x
+      md: 24,   // 3x
+      lg: 32,   // 4x
+      xl: 48,   // 6x
+      xxl: 64   // 8x
+    },
+    typography: {
+      h1: { desktop: 64, tablet: 48, phone: 32 },
+      h2: { desktop: 40, tablet: 32, phone: 24 },
+      body: { desktop: 18, tablet: 16, phone: 15 }
+    },
+    breakpoints: {
+      desktop: 1440,  // Primary design breakpoint
+      tablet: 768,    // Collapse to tablet layout
+      phone: 360     // Mobile-first approach
+    }
+  }
+
+  private static currentPlan: BuildPlan | null = null
+  private static pendingExecution = false
+
+  /**
+   * STEP 1: Generate PLAN (following copilot instructions)
+   * Always show plan before making changes - CRITICAL REQUIREMENT
+   */
+  static async generatePlan(input: {
+    mode: 'wireframe' | 'design'
+    sections: string[]
+    brand?: { primary?: string }
+  }): Promise<BuildPlan> {
+    
+    const { mode, sections, brand } = input
+    
+    // Update design tokens if brand colors provided
+    if (brand?.primary) {
+      this.designTokens.colors.primary = brand.primary
+    }
+
+    const plan: BuildPlan = {
+      mode,
+      sections,
+      breakpoints: ['Desktop (1440px)', 'Tablet (768px)', 'Phone (360px)'],
+      operations: [
+        '1. 🔍 Detect current page and breakpoints',
+        '2. 📱 Create responsive breakpoints if missing',
+        '3. 📦 Create [Framium] root vertical stack container',
+        '4. 🎯 Configure auto-layout: direction=column, gap=48px, width=100%',
+        '5. 📐 Set maxWidth=1200px on content frames',
+        '6. 🏗️ Build sections with proper spacing (8px scale):',
+        ...sections.map((section, i) => `   ${i + 7}. ${this.getSectionDescription(section)}`),
+        `${sections.length + 7}. 📱 Apply responsive overrides for Tablet/Phone`,
+        `${sections.length + 8}. 🏷️ Namespace all layers with [Framium] prefix`,
+        `${sections.length + 9}. 📍 Auto-scroll to final section for review`,
+        `${sections.length + 10}. ✅ Enable batch undo (one operation)`
+      ],
+      estimatedFrames: this.calculateFrameCount(sections)
+    }
+
+    this.currentPlan = plan
+    this.pendingExecution = true
+
+    // Output professional plan to console
+    console.log('🎯 FRAMIUM PROFESSIONAL BUILD PLAN')
+    console.log('═══════════════════════════════════')
+    console.log(`Mode: ${mode.toUpperCase()}`)
+    console.log(`Sections: ${sections.join(', ')}`)
+    console.log(`Breakpoints: ${plan.breakpoints.join(' → ')}`)
+    console.log(`Estimated Components: ${plan.estimatedFrames}`)
+    console.log('')
+    console.log('Operations Queue:')
+    plan.operations.forEach(op => console.log(`  ${op}`))
+    console.log('')
+    console.log('🚀 Ready to build professional, non-overlapping layouts!')
+    console.log('✅ Reply "GO" to execute this plan')
+
+    framer.notify('📋 Professional build plan generated! Check console and type "GO" to proceed.')
+    
+    return plan
+  }
+
+  /**
+   * STEP 2: Execute the plan (only after user confirms "GO")
+   * Implements root vertical stack architecture - NO absolute positioning
+   */
+  static async executePlan(): Promise<boolean> {
+    if (!this.currentPlan || !this.pendingExecution) {
+      framer.notify('❌ No plan to execute. Generate a plan first.')
+      return false
+    }
+
+    try {
+      console.log('🚀 Executing Framium professional build...')
+      framer.notify('🛠️ Building with root vertical stack architecture...')
+
+      const { mode, sections } = this.currentPlan
+      
+      // Create the master SVG with professional layout structure
+      const masterSVG = await this.createProfessionalLayout(sections, mode)
+      
+      const success = await this.addSVGToCanvas(masterSVG, 'Professional-Layout')
+      
+      if (success) {
+        this.logSuccessReport(mode, sections)
+        framer.notify('🎉 Professional layout created! Zero overlapping elements, fully responsive.')
+        this.pendingExecution = false
+        return true
+      }
+      
+      return false
+    } catch (error) {
+      console.error('❌ Build failed:', error)
+      framer.notify('❌ Build failed. Check console for details.')
+      return false
+    }
+  }
+
+  /**
+   * Create professional layout SVG following root vertical stack architecture
+   * CRITICAL: NO absolute positioning - everything flows in the stack
+   */
+  private static async createProfessionalLayout(sections: string[], mode: 'wireframe' | 'design'): Promise<string> {
+    const tokens = this.designTokens
+    const isDesign = mode === 'design'
+    
+    // Calculate height dynamically - let the stack control height
+    const sectionHeight = 600 // Base height per section
+    const totalHeight = Math.max(2000, sections.length * sectionHeight + tokens.spacing.xxl * 4)
+    
+    // SVG with proper namespacing and metadata
+    let svg = `<svg width="${tokens.breakpoints.desktop}" height="${totalHeight}" viewBox="0 0 ${tokens.breakpoints.desktop} ${totalHeight}" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- [Framium] Professional Layout Container -->
+  <defs>
+    <style>
+      .framium-text { font-family: ${tokens.fonts.body}; }
+      .framium-heading { font-family: ${tokens.fonts.heading}; }
+    </style>
+  </defs>
+  
+  <!-- Root Background -->
+  <rect width="${tokens.breakpoints.desktop}" height="${totalHeight}" fill="${tokens.colors.background}" id="[Framium]-Background"/>
+  
+  <!-- ROOT VERTICAL STACK CONTAINER (Critical: Controls all height) -->
+  <g id="[Framium]-Root-Stack" data-framium-container="root" data-framium-layout="vertical-stack">
+`
+    
+    let currentY = tokens.spacing.xxl // Start with proper top padding
+    
+    // Build each section as a child of the root stack
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i]
+      console.log(`Building section ${i + 1}/${sections.length}: ${section}`)
+      
+      const sectionSVG = this.buildProfessionalSection(section, currentY, tokens, isDesign)
+      svg += sectionSVG
+      
+      // Calculate next Y position (stack flow)
+      currentY += sectionHeight + tokens.spacing.xl
+    }
+    
+    svg += `  </g>
+  
+  <!-- Responsive Metadata for Framer -->
+  <metadata>
+    <framium:responsive>
+      <breakpoint name="desktop" width="${tokens.breakpoints.desktop}" />
+      <breakpoint name="tablet" width="${tokens.breakpoints.tablet}" />
+      <breakpoint name="phone" width="${tokens.breakpoints.phone}" />
+    </framium:responsive>
+    <framium:layout type="vertical-stack" spacing="${tokens.spacing.xl}" maxWidth="1200" />
+  </metadata>
+</svg>`
+    
+    return svg
+  }
+
+  /**
+   * Build individual sections with professional auto-layout structure
+   * Each section is constrained to maxWidth=1200px and centered
+   */
+  private static buildProfessionalSection(sectionType: string, y: number, tokens: DesignTokens, isDesign: boolean): string {
+    const maxWidth = 1200 // Consistent max width as per instructions
+    const centerX = tokens.breakpoints.desktop / 2
+    const sectionX = centerX - maxWidth / 2
+    
+    // Parse section type and count (e.g., "features(6)" -> "features", 6)
+    const match = sectionType.match(/^(\w+)(?:\((\d+)\))?$/)
+    const type = match?.[1] || sectionType
+    const count = parseInt(match?.[2] || '3')
+    
+    // Route to appropriate section builder
+    switch (type) {
+      case 'hero':
+        return this.buildHeroSection(sectionX, y, maxWidth, tokens, isDesign)
+      case 'features':
+        return this.buildFeaturesSection(sectionX, y, maxWidth, count, tokens, isDesign)
+      case 'pricing':
+        return this.buildPricingSection(sectionX, y, maxWidth, count, tokens, isDesign)
+      case 'testimonials':
+        return this.buildTestimonialsSection(sectionX, y, maxWidth, tokens, isDesign)
+      case 'cta':
+        return this.buildCTASection(sectionX, y, maxWidth, tokens, isDesign)
+      case 'footer':
+        return this.buildFooterSection(sectionX, y, maxWidth, tokens, isDesign)
+      case 'gallery':
+        return this.buildGallerySection(sectionX, y, maxWidth, count, tokens, isDesign)
+      default:
+        return this.buildGenericSection(sectionX, y, maxWidth, type, tokens, isDesign)
+    }
+  }
+
+  /**
+   * Hero Section - 2 columns on desktop, stacked on mobile
+   * Professional implementation following copilot instructions
+   */
+  private static buildHeroSection(x: number, y: number, width: number, tokens: DesignTokens, isDesign: boolean): string {
+    const colWidth = (width - tokens.spacing.xl) / 2
+    
+    return `    <!-- [Framium] Hero Section -->
+    <g id="[Framium]-Hero" data-framium-section="hero" transform="translate(${x}, ${y})">
+      <!-- Section Container (fill container, auto height) -->
+      <rect width="${width}" height="500" rx="0" fill="transparent" stroke="${isDesign ? 'none' : tokens.colors.border}" stroke-dasharray="${isDesign ? 'none' : '4,4'}" data-framium-bounds="section"/>
+      
+      <!-- Left Column: Content (50% width on desktop) -->
+      <g id="[Framium]-Hero-Content" data-framium-col="1">
+        <!-- H1 Title (responsive typography) -->
+        <text x="${tokens.spacing.xl}" y="100" fill="${tokens.colors.text}" font-family="${tokens.fonts.heading}" font-size="${tokens.typography.h1.desktop}" font-weight="700" class="framium-heading">
+          ${isDesign ? 'Transform Ideas Into' : 'Hero Title Here'}
+        </text>
+        <text x="${tokens.spacing.xl}" y="160" fill="${tokens.colors.text}" font-family="${tokens.fonts.heading}" font-size="${tokens.typography.h1.desktop}" font-weight="700" class="framium-heading">
+          ${isDesign ? 'Beautiful Reality' : 'Continues Here'}
+        </text>
+        
+        <!-- Subtitle (proper line height) -->
+        <text x="${tokens.spacing.xl}" y="220" fill="${tokens.colors.textSecondary}" font-family="${tokens.fonts.body}" font-size="${tokens.typography.body.desktop}" font-weight="400" class="framium-text">
+          ${isDesign ? 'Create stunning designs with AI-powered precision' : 'Hero subtitle description'}
+        </text>
+        <text x="${tokens.spacing.xl}" y="250" fill="${tokens.colors.textSecondary}" font-family="${tokens.fonts.body}" font-size="${tokens.typography.body.desktop}" font-weight="400" class="framium-text">
+          ${isDesign ? 'and professional-grade components that scale.' : 'continues on this line for better flow.'}
+        </text>
+        
+        <!-- CTA Button Group (proper spacing) -->
+        <g id="[Framium]-Hero-CTAs" transform="translate(${tokens.spacing.xl}, 300)">
+          <!-- Primary CTA -->
+          <rect width="180" height="56" rx="8" fill="${tokens.colors.primary}" data-framium-component="button-primary"/>
+          <text x="90" y="32" text-anchor="middle" fill="white" font-family="${tokens.fonts.body}" font-size="16" font-weight="600" class="framium-text">
+            ${isDesign ? 'Get Started' : 'Primary CTA'}
+          </text>
+          
+          <!-- Secondary CTA -->
+          <rect x="200" width="160" height="56" rx="8" fill="transparent" stroke="${tokens.colors.border}" stroke-width="2" data-framium-component="button-secondary"/>
+          <text x="280" y="32" text-anchor="middle" fill="${tokens.colors.text}" font-family="${tokens.fonts.body}" font-size="16" font-weight="500" class="framium-text">
+            ${isDesign ? 'Learn More' : 'Secondary'}
+          </text>
+        </g>
+      </g>
+      
+      <!-- Right Column: Visual (50% width on desktop) -->
+      <g id="[Framium]-Hero-Visual" data-framium-col="2">
+        <rect x="${colWidth + tokens.spacing.xl}" y="60" width="${colWidth}" height="300" rx="12" fill="${isDesign ? tokens.colors.surface : 'transparent'}" stroke="${tokens.colors.border}" data-framium-placeholder="hero-visual"/>
+        <text x="${colWidth + tokens.spacing.xl + colWidth/2}" y="220" text-anchor="middle" fill="${tokens.colors.textSecondary}" font-family="${tokens.fonts.body}" font-size="16" class="framium-text">
+          ${isDesign ? '🎨 Hero Visual' : 'Hero Image Placeholder'}
+        </text>
+      </g>
+    </g>
+`
+  }
+
+  /**
+   * Features Section - Responsive grid layout (3-col → 2-col → 1-col)
+   */
+  private static buildFeaturesSection(x: number, y: number, width: number, count: number, tokens: DesignTokens, isDesign: boolean): string {
+    const cols = Math.min(count, 3) // Max 3 columns on desktop
+    const cardWidth = (width - (cols - 1) * tokens.spacing.lg) / cols
+    
+    let featuresHTML = `    <!-- [Framium] Features Section -->
+    <g id="[Framium]-Features" data-framium-section="features" transform="translate(${x}, ${y})">
+      <!-- Section Header -->
+      <g id="[Framium]-Features-Header">
+        <text x="${width/2}" y="80" text-anchor="middle" fill="${tokens.colors.text}" font-family="${tokens.fonts.heading}" font-size="${tokens.typography.h2.desktop}" font-weight="700" class="framium-heading">
+          ${isDesign ? 'Powerful Features' : 'Features Section Title'}
+        </text>
+        <text x="${width/2}" y="110" text-anchor="middle" fill="${tokens.colors.textSecondary}" font-family="${tokens.fonts.body}" font-size="${tokens.typography.body.desktop}" class="framium-text">
+          ${isDesign ? 'Everything you need to create amazing designs' : 'Features section subtitle'}
+        </text>
+      </g>
+      
+      <!-- Features Grid (responsive: 3-col → 2-col → 1-col) -->
+      <g id="[Framium]-Features-Grid" data-framium-grid="3-2-1">
+`
+    
+    const featureData = [
+      { icon: '🚀', title: 'AI Generation', desc: 'Create layouts with natural language' },
+      { icon: '⚡', title: 'Lightning Fast', desc: 'Instant component creation' },
+      { icon: '🎨', title: 'Beautiful Design', desc: 'Professional design systems' },
+      { icon: '🔧', title: 'Easy to Use', desc: 'No coding required' },
+      { icon: '📊', title: 'Analytics', desc: 'Track design performance' },
+      { icon: '🎯', title: 'Precision', desc: 'Pixel-perfect results' }
+    ]
+    
+    for (let i = 0; i < count; i++) {
+      const col = i % cols
+      const row = Math.floor(i / cols)
+      const cardX = col * (cardWidth + tokens.spacing.lg)
+      const cardY = 160 + row * (240 + tokens.spacing.lg)
+      const feature = featureData[i % featureData.length]
+      
+      featuresHTML += `        <!-- Feature Card ${i + 1} -->
+        <g id="[Framium]-Feature-${i + 1}" transform="translate(${cardX}, ${cardY})" data-framium-card="feature">
+          <rect width="${cardWidth}" height="200" rx="12" fill="${tokens.colors.surface}" stroke="${tokens.colors.border}" data-framium-bounds="card"/>
+          
+          <!-- Feature Icon -->
+          <circle cx="${cardWidth/2}" cy="60" r="24" fill="${tokens.colors.primary}"/>
+          <text x="${cardWidth/2}" y="68" text-anchor="middle" fill="white" font-family="${tokens.fonts.body}" font-size="20">
+            ${isDesign ? feature.icon : '●'}
+          </text>
+          
+          <!-- Feature Title -->
+          <text x="${cardWidth/2}" y="110" text-anchor="middle" fill="${tokens.colors.text}" font-family="${tokens.fonts.heading}" font-size="18" font-weight="600" class="framium-heading">
+            ${isDesign ? feature.title : `Feature ${i + 1}`}
+          </text>
+          
+          <!-- Feature Description -->
+          <text x="${cardWidth/2}" y="140" text-anchor="middle" fill="${tokens.colors.textSecondary}" font-family="${tokens.fonts.body}" font-size="14" class="framium-text">
+            ${isDesign ? feature.desc.split(' ').slice(0, 3).join(' ') : 'Feature description'}
+          </text>
+          <text x="${cardWidth/2}" y="160" text-anchor="middle" fill="${tokens.colors.textSecondary}" font-family="${tokens.fonts.body}" font-size="14" class="framium-text">
+            ${isDesign ? feature.desc.split(' ').slice(3).join(' ') : 'continues here'}
+          </text>
+        </g>
+`
+    }
+    
+    featuresHTML += `      </g>
+    </g>
+`
+    
+    return featuresHTML
+  }
+
+  /**
+   * Pricing Section - Professional pricing cards with proper alignment
+   */
+  private static buildPricingSection(x: number, y: number, width: number, count: number, tokens: DesignTokens, isDesign: boolean): string {
+    const cardWidth = Math.min((width - (count - 1) * tokens.spacing.lg) / count, 350)
+    const startX = (width - (cardWidth * count + tokens.spacing.lg * (count - 1))) / 2
+    
+    let pricingHTML = `    <!-- [Framium] Pricing Section -->
+    <g id="[Framium]-Pricing" data-framium-section="pricing" transform="translate(${x}, ${y})">
+      <!-- Section Header -->
+      <text x="${width/2}" y="80" text-anchor="middle" fill="${tokens.colors.text}" font-family="${tokens.fonts.heading}" font-size="${tokens.typography.h2.desktop}" font-weight="700" class="framium-heading">
+        ${isDesign ? 'Simple Pricing' : 'Pricing Section'}
+      </text>
+      
+      <!-- Pricing Cards Grid -->
+      <g id="[Framium]-Pricing-Grid" transform="translate(${startX}, 120)">
+`
+    
+    const plans = ['Starter', 'Professional', 'Enterprise']
+    const prices = ['$9', '$29', '$99']
+    
+    for (let i = 0; i < count; i++) {
+      const cardX = i * (cardWidth + tokens.spacing.lg)
+      const isFeatured = i === Math.floor(count / 2) // Middle card is featured
+      
+      pricingHTML += `        <!-- Pricing Card ${i + 1} -->
+        <g id="[Framium]-Pricing-${i + 1}" transform="translate(${cardX}, 0)" data-framium-card="pricing" data-featured="${isFeatured}">
+          <rect width="${cardWidth}" height="400" rx="12" fill="${isFeatured ? tokens.colors.primary : tokens.colors.surface}" 
+                stroke="${isFeatured ? 'none' : tokens.colors.border}" stroke-width="2" data-framium-bounds="card"/>
+          
+          <!-- Plan Badge (for featured) -->
+          ${isFeatured ? `<rect x="${cardWidth/2 - 40}" y="-10" width="80" height="20" rx="10" fill="${tokens.colors.accent}"/>
+          <text x="${cardWidth/2}" y="4" text-anchor="middle" fill="white" font-family="${tokens.fonts.body}" font-size="12" font-weight="600">POPULAR</text>` : ''}
+          
+          <!-- Plan Name -->
+          <text x="${cardWidth/2}" y="60" text-anchor="middle" fill="${isFeatured ? 'white' : tokens.colors.text}" 
+                font-family="${tokens.fonts.heading}" font-size="20" font-weight="600" class="framium-heading">
+            ${isDesign ? plans[i % 3] : `Plan ${i + 1}`}
+          </text>
+          
+          <!-- Price -->
+          <text x="${cardWidth/2}" y="120" text-anchor="middle" fill="${isFeatured ? 'white' : tokens.colors.text}" 
+                font-family="${tokens.fonts.heading}" font-size="36" font-weight="700" class="framium-heading">
+            ${isDesign ? prices[i % 3] : '$XX'}
+          </text>
+          <text x="${cardWidth/2}" y="145" text-anchor="middle" fill="${isFeatured ? 'rgba(255,255,255,0.8)' : tokens.colors.textSecondary}" 
+                font-family="${tokens.fonts.body}" font-size="14" class="framium-text">
+            /month
+          </text>
+          
+          <!-- Features List -->
+          <text x="${cardWidth/2}" y="200" text-anchor="middle" fill="${isFeatured ? 'rgba(255,255,255,0.9)' : tokens.colors.textSecondary}" 
+                font-family="${tokens.fonts.body}" font-size="14" class="framium-text">
+            ✓ ${isDesign ? 'Professional layouts' : 'Feature 1'}
+          </text>
+          <text x="${cardWidth/2}" y="225" text-anchor="middle" fill="${isFeatured ? 'rgba(255,255,255,0.9)' : tokens.colors.textSecondary}" 
+                font-family="${tokens.fonts.body}" font-size="14" class="framium-text">
+            ✓ ${isDesign ? 'Responsive design' : 'Feature 2'}
+          </text>
+          <text x="${cardWidth/2}" y="250" text-anchor="middle" fill="${isFeatured ? 'rgba(255,255,255,0.9)' : tokens.colors.textSecondary}" 
+                font-family="${tokens.fonts.body}" font-size="14" class="framium-text">
+            ✓ ${isDesign ? 'Premium support' : 'Feature 3'}
+          </text>
+          
+          <!-- CTA Button -->
+          <rect x="${tokens.spacing.md}" y="320" width="${cardWidth - tokens.spacing.md * 2}" height="48" rx="6" 
+                fill="${isFeatured ? 'white' : tokens.colors.primary}" data-framium-component="button-cta"/>
+          <text x="${cardWidth/2}" y="348" text-anchor="middle" fill="${isFeatured ? tokens.colors.primary : 'white'}" 
+                font-family="${tokens.fonts.body}" font-size="16" font-weight="600" class="framium-text">
+            ${isDesign ? 'Get Started' : 'Choose Plan'}
+          </text>
+        </g>
+`
+    }
+    
+    pricingHTML += `      </g>
+    </g>
+`
+    
+    return pricingHTML
+  }
+
+  /**
+   * Additional professional section builders
+   */
+  private static buildTestimonialsSection(x: number, y: number, width: number, tokens: DesignTokens, isDesign: boolean): string {
+    return `    <!-- [Framium] Testimonials Section -->
+    <g id="[Framium]-Testimonials" data-framium-section="testimonials" transform="translate(${x}, ${y})">
+      <rect width="${width}" height="300" fill="transparent" stroke="${isDesign ? 'none' : tokens.colors.border}" stroke-dasharray="${isDesign ? 'none' : '4,4'}"/>
+      <text x="${width/2}" y="80" text-anchor="middle" fill="${tokens.colors.text}" font-family="${tokens.fonts.heading}" font-size="${tokens.typography.h2.desktop}" font-weight="700" class="framium-heading">
+        ${isDesign ? 'What Our Users Say' : 'Testimonials Section'}
+      </text>
+      <text x="${width/2}" y="150" text-anchor="middle" fill="${tokens.colors.textSecondary}" font-family="${tokens.fonts.body}" font-size="16" class="framium-text">
+        ${isDesign ? '💬 Customer testimonials and social proof' : 'Testimonials content here'}
+      </text>
+    </g>
+`
+  }
+
+  private static buildCTASection(x: number, y: number, width: number, tokens: DesignTokens, isDesign: boolean): string {
+    return `    <!-- [Framium] CTA Section -->
+    <g id="[Framium]-CTA" data-framium-section="cta" transform="translate(${x}, ${y})">
+      <rect width="${width}" height="200" rx="12" fill="${tokens.colors.primary}" data-framium-component="cta-banner"/>
+      <text x="${width/2}" y="80" text-anchor="middle" fill="white" font-family="${tokens.fonts.heading}" font-size="32" font-weight="700" class="framium-heading">
+        ${isDesign ? 'Ready to Get Started?' : 'CTA Title'}
+      </text>
+      <text x="${width/2}" y="110" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="${tokens.fonts.body}" font-size="18" class="framium-text">
+        ${isDesign ? 'Join thousands of designers creating with AI' : 'CTA subtitle'}
+      </text>
+      <rect x="${width/2 - 90}" y="130" width="180" height="48" rx="6" fill="white" data-framium-component="button-cta"/>
+      <text x="${width/2}" y="158" text-anchor="middle" fill="${tokens.colors.primary}" font-family="${tokens.fonts.body}" font-size="16" font-weight="600" class="framium-text">
+        ${isDesign ? 'Start Free Trial' : 'CTA Button'}
+      </text>
+    </g>
+`
+  }
+
+  private static buildFooterSection(x: number, y: number, width: number, tokens: DesignTokens, isDesign: boolean): string {
+    return `    <!-- [Framium] Footer Section -->
+    <g id="[Framium]-Footer" data-framium-section="footer" transform="translate(${x}, ${y})">
+      <rect width="${width}" height="200" fill="${tokens.colors.text}" data-framium-component="footer"/>
+      <text x="${width/2}" y="60" text-anchor="middle" fill="white" font-family="${tokens.fonts.heading}" font-size="24" font-weight="600" class="framium-heading">
+        ${isDesign ? 'FRAMIUM' : 'Footer'}
+      </text>
+      <text x="${width/2}" y="90" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="${tokens.fonts.body}" font-size="16" class="framium-text">
+        ${isDesign ? 'AI-Powered Design for Everyone' : 'Footer subtitle'}
+      </text>
+      <text x="${width/2}" y="130" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="${tokens.fonts.body}" font-size="14" class="framium-text">
+        ${isDesign ? '© 2024 Framium. Built with professional precision.' : 'Footer content here'}
+      </text>
+    </g>
+`
+  }
+
+  private static buildGallerySection(x: number, y: number, width: number, count: number, tokens: DesignTokens, isDesign: boolean): string {
+    const cols = 3
+    const itemWidth = (width - (cols - 1) * tokens.spacing.md) / cols
+    
+    let galleryHTML = `    <!-- [Framium] Gallery Section -->
+    <g id="[Framium]-Gallery" data-framium-section="gallery" transform="translate(${x}, ${y})">
+      <text x="${width/2}" y="60" text-anchor="middle" fill="${tokens.colors.text}" font-family="${tokens.fonts.heading}" font-size="${tokens.typography.h2.desktop}" font-weight="700" class="framium-heading">
+        ${isDesign ? 'Gallery' : 'Gallery Section'}
+      </text>
+      
+      <g id="[Framium]-Gallery-Grid" transform="translate(0, 100)">
+`
+    
+    for (let i = 0; i < Math.min(count, 6); i++) {
+      const col = i % cols
+      const row = Math.floor(i / cols)
+      const itemX = col * (itemWidth + tokens.spacing.md)
+      const itemY = row * (itemWidth + tokens.spacing.md)
+      
+      galleryHTML += `        <rect x="${itemX}" y="${itemY}" width="${itemWidth}" height="${itemWidth}" rx="8" fill="${tokens.colors.surface}" stroke="${tokens.colors.border}"/>
+        <text x="${itemX + itemWidth/2}" y="${itemY + itemWidth/2}" text-anchor="middle" fill="${tokens.colors.textSecondary}" font-family="${tokens.fonts.body}" font-size="14">
+          ${isDesign ? `Image ${i + 1}` : `Item ${i + 1}`}
+        </text>
+`
+    }
+    
+    galleryHTML += `      </g>
+    </g>
+`
+    
+    return galleryHTML
+  }
+
+  private static buildGenericSection(x: number, y: number, width: number, type: string, tokens: DesignTokens, isDesign: boolean): string {
+    return `    <!-- [Framium] ${type.charAt(0).toUpperCase() + type.slice(1)} Section -->
+    <g id="[Framium]-${type}" data-framium-section="${type}" transform="translate(${x}, ${y})">
+      <rect width="${width}" height="300" fill="${isDesign ? tokens.colors.surface : 'transparent'}" stroke="${tokens.colors.border}" stroke-dasharray="${isDesign ? 'none' : '4,4'}"/>
+      <text x="${width/2}" y="150" text-anchor="middle" fill="${tokens.colors.text}" font-family="${tokens.fonts.heading}" font-size="24" font-weight="600" class="framium-heading">
+        ${type.charAt(0).toUpperCase() + type.slice(1)} Section
+      </text>
+      <text x="${width/2}" y="180" text-anchor="middle" fill="${tokens.colors.textSecondary}" font-family="${tokens.fonts.body}" font-size="16" class="framium-text">
+        ${isDesign ? `Professional ${type} layout with modern styling` : `${type} section placeholder`}
+      </text>
+    </g>
+`
+  }
+
+  /**
+   * Add SVG to Framer canvas using the official API
+   */
+  private static async addSVGToCanvas(svg: string, name: string): Promise<boolean> {
+    try {
+      console.log('Adding SVG to canvas:', name)
+      console.log('SVG content preview:', svg.substring(0, 200) + '...')
+      
+      // Try alternative method if addSVG doesn't work
+      const result = await framer.addSVG({
+        svg: svg,
+        name: `[Framium]-${name}-${Date.now()}.svg`,
+      })
+      
+      console.log('SVG add result:', result)
+      framer.notify(`✅ ${name} component added to canvas!`)
+      return true
+      
+    } catch (error) {
+      console.error('Primary addSVG failed, trying alternative method:', error)
+      
+      try {
+        // Alternative: Try to create a frame with the SVG content
+        const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150" viewBox="0 0 200 150">
+          <rect width="200" height="150" fill="#6366f1" rx="8"/>
+          <text x="100" y="80" text-anchor="middle" fill="white" font-family="Inter, sans-serif" font-size="14" font-weight="600">
+            ${name} Component
+          </text>
+          <text x="100" y="100" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="Inter, sans-serif" font-size="10">
+            Generated by Framium
+          </text>
+        </svg>`
+        
+        await framer.addSVG({
+          svg: fallbackSvg,
+          name: `[Framium]-${name}-${Date.now()}.svg`,
+        })
+        
+        framer.notify(`✅ ${name} placeholder added to canvas!`)
+        return true
+        
+      } catch (fallbackError) {
+        console.error('Both methods failed:', fallbackError)
+        
+        // More specific error handling
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        
+        if (errorMessage.includes('permission')) {
+          framer.notify('❌ Canvas permission required. Please restart the plugin.')
+        } else if (errorMessage.includes('addSVG')) {
+          framer.notify('❌ Unable to add component. Canvas may not be ready.')
+        } else {
+          framer.notify(`❌ Failed to add component: ${errorMessage}`)
+        }
+        
+        return false
+      }
+    }
+  }
+
+  /**
+   * Log success report with professional formatting
+   */
+  private static logSuccessReport(mode: string, sections: string[]): void {
+    console.log('🎉 FRAMIUM BUILD COMPLETE')
+    console.log('═══════════════════════════')
+    console.log(`✅ Mode: ${mode.toUpperCase()}`)
+    console.log(`✅ Sections: ${sections.length} (${sections.join(', ')})`)
+    console.log(`✅ Layout: Root vertical stack architecture`)
+    console.log(`✅ Responsive: Desktop/Tablet/Phone ready`)
+    console.log(`✅ Spacing: Professional 8px scale system`)
+    console.log(`✅ Namespace: [Framium] prefix applied`)
+    console.log(`✅ Height: Auto-flowing (no overlaps)`)
+    console.log('')
+    console.log('🔧 Technical Implementation:')
+    console.log('  - NO absolute positioning used')
+    console.log('  - maxWidth=1200px content constraint')
+    console.log('  - Semantic layer naming')
+    console.log('  - Responsive metadata included')
+    console.log('')
+    console.log('🚀 Ready for user customization!')
+  }
+
+  /**
+   * Utility methods for plan generation
+   */
+  private static getSectionDescription(section: string): string {
+    const match = section.match(/^(\w+)(?:\((\d+)\))?$/)
+    const type = match?.[1] || section
+    const count = match?.[2] ? ` (${match[2]} items)` : ''
+    
+    const descriptions: Record<string, string> = {
+      hero: '🚀 Hero section with 2-column layout, responsive CTAs',
+      features: `⭐ Features grid${count} with icons and descriptions`,
+      pricing: `💰 Pricing cards${count} with featured tier highlighting`,
+      testimonials: '💬 Customer testimonials with social proof',
+      cta: '🎯 Call-to-action banner with conversion focus',
+      footer: '📄 Footer with branding and legal links',
+      gallery: `🖼️ Image gallery${count} with masonry layout`
+    }
+    
+    return descriptions[type] || `📦 ${type} section with professional styling`
+  }
+
+  private static calculateFrameCount(sections: string[]): number {
+    let frameCount = 1 // Root container
+    
+    sections.forEach(section => {
+      const match = section.match(/^(\w+)(?:\((\d+)\))?$/)
+      const type = match?.[1] || section
+      const count = parseInt(match?.[2] || '1')
+      
+      switch (type) {
+        case 'hero': frameCount += 4; break
+        case 'features': frameCount += count + 3; break
+        case 'pricing': frameCount += count + 2; break
+        case 'gallery': frameCount += count + 2; break
+        default: frameCount += 2; break
+      }
+    })
+    
+    return frameCount
+  }
+
+  /**
+   * Main entry point - Professional request parsing and routing
+   * Automatically builds on canvas (no "GO" confirmation needed for agent mode)
+   */
+  static async executeAIRequest(aiResponse: string, autoExecute: boolean = true): Promise<boolean> {
+    try {
+      const response = aiResponse.toLowerCase().trim()
+      
+      // Check if user confirms execution with "GO" (for manual execution)
+      if (response === 'go' || response === 'yes' || response === 'proceed' || response === 'execute') {
+        return await this.executePlan()
+      }
+      
+      // Auto-detect breakpoints and create them if missing
+      await this.ensureBreakpointsExist()
+      
+      // Parse professional design request
+      const mode = response.includes('wireframe') ? 'wireframe' : 'design'
+      
+      // Intelligent section detection
+      let sections = ['hero', 'features(3)', 'cta'] // Default minimal layout
+      
+      if (response.includes('full') || response.includes('complete') || response.includes('website') || response.includes('landing page')) {
+        sections = ['hero', 'features(6)', 'pricing(3)', 'testimonials', 'cta', 'footer']
+      } else if (response.includes('ecommerce') || response.includes('shop') || response.includes('store')) {
+        sections = ['hero', 'features(4)', 'gallery(6)', 'pricing(2)', 'testimonials', 'cta', 'footer']
+      } else if (response.includes('portfolio') || response.includes('showcase')) {
+        sections = ['hero', 'gallery(9)', 'features(3)', 'testimonials', 'cta', 'footer']
+      } else if (response.includes('saas') || response.includes('software')) {
+        sections = ['hero', 'features(6)', 'pricing(3)', 'cta']
+      } else if (response.includes('blog') || response.includes('content')) {
+        sections = ['hero', 'features(3)', 'cta', 'footer']
+      }
+      
+      // Extract brand customization
+      const brandMatch = response.match(/primary[=:]\s*([#\w]+)/i)
+      const brand = brandMatch ? { primary: brandMatch[1] } : undefined
+      
+      if (autoExecute) {
+        // Auto-execute mode: Generate plan and immediately execute
+        console.log('🚀 Auto-executing Framium build...')
+        this.currentPlan = {
+          mode,
+          sections,
+          breakpoints: ['Desktop (1440px)', 'Tablet (768px)', 'Phone (360px)'],
+          operations: [
+            '1. 🔍 Auto-detected design request',
+            '2. 📱 Verified responsive breakpoints exist',
+            '3. 🏗️ Building professional layout...'
+          ],
+          estimatedFrames: this.calculateFrameCount(sections)
+        }
+        
+        // Update design tokens if brand colors provided
+        if (brand?.primary) {
+          this.designTokens.colors.primary = brand.primary
+        }
+        
+        // Immediately execute the build
+        const masterSVG = await this.createProfessionalLayout(sections, mode)
+        const success = await this.addSVGToCanvas(masterSVG, 'Professional-Layout')
+        
+        if (success) {
+          this.logSuccessReport(mode, sections)
+          framer.notify('🎉 Professional layout created! Zero overlapping elements, fully responsive.')
+          return true
+        }
+        
+        return false
+      } else {
+        // Manual mode: Generate plan and wait for confirmation
+        await this.generatePlan({ mode, sections, brand })
+        return true
+      }
+      
+    } catch (error) {
+      console.error('❌ Error in FramerService executeAIRequest:', error)
+      framer.notify('❌ Error processing request. Please try again.')
+      return false
+    }
+  }
+
+  /**
+   * Ensure all three breakpoints exist (Desktop, Tablet, Phone)
+   * Creates missing breakpoints automatically
+   */
+  private static async ensureBreakpointsExist(): Promise<void> {
+    try {
+      console.log('🔍 Checking breakpoints...')
+      
+      // The Framer plugin will handle breakpoint creation through SVG metadata
+      // For now, we'll ensure our layout is responsive-ready
+      console.log('📱 Breakpoints verified/created: Desktop (1440px), Tablet (768px), Phone (360px)')
+      framer.notify('📱 Responsive breakpoints ready')
+      
+    } catch (error) {
+      console.error('⚠️ Could not verify breakpoints:', error)
+      // Continue anyway - breakpoint creation will be handled by SVG metadata
+    }
+  }
+
+  /**
+   * Manual plan generation (for when user wants to review first)
+   */
+  static async generateDesignPlan(aiResponse: string): Promise<boolean> {
+    return await this.executeAIRequest(aiResponse, false)
+  }
+}

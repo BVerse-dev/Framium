@@ -74,6 +74,279 @@ export type Database = {
           },
         ]
       }
+      custom_rules: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string | null
+          prompt: string
+          category: string | null
+          enabled: boolean | null
+          priority: number | null
+          conditions: Json | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description?: string | null
+          prompt: string
+          category?: string | null
+          enabled?: boolean | null
+          priority?: number | null
+          conditions?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          prompt?: string
+          category?: string | null
+          enabled?: boolean | null
+          priority?: number | null
+          conditions?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_rules_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_templates: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string | null
+          steps: Json
+          category: string | null
+          enabled: boolean | null
+          is_public: boolean | null
+          usage_count: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description?: string | null
+          steps: Json
+          category?: string | null
+          enabled?: boolean | null
+          is_public?: boolean | null
+          usage_count?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          steps?: Json
+          category?: string | null
+          enabled?: boolean | null
+          is_public?: boolean | null
+          usage_count?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_templates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finetuning_projects: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string | null
+          base_model: string
+          status: string | null
+          progress: number | null
+          training_data: Json | null
+          model_config: Json | null
+          deployed_model_id: string | null
+          training_started_at: string | null
+          completed_at: string | null
+          error_message: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description?: string | null
+          base_model: string
+          status?: string | null
+          progress?: number | null
+          training_data?: Json | null
+          model_config?: Json | null
+          deployed_model_id?: string | null
+          training_started_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          base_model?: string
+          status?: string | null
+          progress?: number | null
+          training_data?: Json | null
+          model_config?: Json | null
+          deployed_model_id?: string | null
+          training_started_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finetuning_projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rule_executions: {
+        Row: {
+          id: string
+          user_id: string
+          rule_id: string
+          context: Json | null
+          input_prompt: string | null
+          output_result: string | null
+          tokens_used: number | null
+          execution_time_ms: number | null
+          success: boolean | null
+          error_message: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          rule_id: string
+          context?: Json | null
+          input_prompt?: string | null
+          output_result?: string | null
+          tokens_used?: number | null
+          execution_time_ms?: number | null
+          success?: boolean | null
+          error_message?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          rule_id?: string
+          context?: Json | null
+          input_prompt?: string | null
+          output_result?: string | null
+          tokens_used?: number | null
+          execution_time_ms?: number | null
+          success?: boolean | null
+          error_message?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rule_executions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rule_executions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "custom_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_executions: {
+        Row: {
+          id: string
+          user_id: string
+          workflow_id: string
+          status: string | null
+          current_step: number | null
+          step_results: Json | null
+          total_tokens_used: number | null
+          started_at: string | null
+          completed_at: string | null
+          error_message: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          workflow_id: string
+          status?: string | null
+          current_step?: number | null
+          step_results?: Json | null
+          total_tokens_used?: number | null
+          started_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          workflow_id?: string
+          status?: string | null
+          current_step?: number | null
+          step_results?: Json | null
+          total_tokens_used?: number | null
+          started_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_executions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_executions_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_prompts: {
         Row: {
           category: string | null
@@ -396,6 +669,42 @@ export type Database = {
       }
       update_user_plan: {
         Args: { user_uuid: string; new_plan: string; stripe_sub_id?: string }
+        Returns: boolean
+      }
+      get_active_rules_for_context: {
+        Args: {
+          user_uuid: string
+          context_data?: Json
+        }
+        Returns: {
+          id: string
+          name: string
+          prompt: string
+          category: string
+          priority: number
+          conditions: Json
+        }[]
+      }
+      log_rule_execution: {
+        Args: {
+          user_uuid: string
+          rule_uuid: string
+          context_data: Json
+          input_text: string
+          output_text: string
+          tokens?: number
+          execution_ms?: number
+          is_success?: boolean
+          error_text?: string
+        }
+        Returns: string
+      }
+      increment_workflow_usage: {
+        Args: { workflow_uuid: string }
+        Returns: boolean
+      }
+      can_user_create_finetuning: {
+        Args: { user_uuid: string }
         Returns: boolean
       }
     }

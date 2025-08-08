@@ -254,5 +254,263 @@ export const db = {
         requested_tokens: requestedTokens
       })
     return { data, error }
+  },
+
+  // Custom Rules operations
+  customRules: {
+    getUserRules: async (userId: string) => {
+      const { data, error } = await supabase
+        .from('custom_rules')
+        .select('*')
+        .eq('user_id', userId)
+        .order('priority', { ascending: true })
+      return { data, error }
+    },
+
+    create: async (ruleData: Database['public']['Tables']['custom_rules']['Insert']) => {
+      const { data, error } = await supabase
+        .from('custom_rules')
+        .insert(ruleData)
+        .select()
+        .single()
+      return { data, error }
+    },
+
+    update: async (ruleId: string, updates: Database['public']['Tables']['custom_rules']['Update']) => {
+      const { data, error } = await supabase
+        .from('custom_rules')
+        .update(updates)
+        .eq('id', ruleId)
+        .select()
+        .single()
+      return { data, error }
+    },
+
+    delete: async (ruleId: string) => {
+      const { error } = await supabase
+        .from('custom_rules')
+        .delete()
+        .eq('id', ruleId)
+      return { error }
+    },
+
+    toggle: async (ruleId: string, enabled: boolean) => {
+      const { data, error } = await supabase
+        .from('custom_rules')
+        .update({ enabled, updated_at: new Date().toISOString() })
+        .eq('id', ruleId)
+        .select()
+        .single()
+      return { data, error }
+    }
+  },
+
+  // Workflow Templates operations
+  workflowTemplates: {
+    getUserWorkflows: async (userId: string) => {
+      const { data, error } = await supabase
+        .from('workflow_templates')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+      return { data, error }
+    },
+
+    getPublicWorkflows: async () => {
+      const { data, error } = await supabase
+        .from('workflow_templates')
+        .select('*')
+        .eq('is_public', true)
+        .order('usage_count', { ascending: false })
+      return { data, error }
+    },
+
+    create: async (workflowData: Database['public']['Tables']['workflow_templates']['Insert']) => {
+      const { data, error } = await supabase
+        .from('workflow_templates')
+        .insert(workflowData)
+        .select()
+        .single()
+      return { data, error }
+    },
+
+    update: async (workflowId: string, updates: Database['public']['Tables']['workflow_templates']['Update']) => {
+      const { data, error } = await supabase
+        .from('workflow_templates')
+        .update(updates)
+        .eq('id', workflowId)
+        .select()
+        .single()
+      return { data, error }
+    },
+
+    delete: async (workflowId: string) => {
+      const { error } = await supabase
+        .from('workflow_templates')
+        .delete()
+        .eq('id', workflowId)
+      return { error }
+    },
+
+    toggle: async (workflowId: string, enabled: boolean) => {
+      const { data, error } = await supabase
+        .from('workflow_templates')
+        .update({ enabled, updated_at: new Date().toISOString() })
+        .eq('id', workflowId)
+        .select()
+        .single()
+      return { data, error }
+    }
+  },
+
+  // Fine-tuning Projects operations (Ultimate plan only)
+  fineTuningProjects: {
+    getUserProjects: async (userId: string) => {
+      // Check if user has Ultimate plan first
+      const { data: user } = await supabase
+        .from('users')
+        .select('plan')
+        .eq('id', userId)
+        .single()
+      
+      if (!user || user.plan !== 'Ultimate') {
+        return { data: null, error: { message: 'Ultimate plan required for fine-tuning access' } }
+      }
+
+      const { data, error } = await supabase
+        .from('finetuning_projects')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+      return { data, error }
+    },
+
+    create: async (projectData: Database['public']['Tables']['finetuning_projects']['Insert']) => {
+      const { data, error } = await supabase
+        .from('finetuning_projects')
+        .insert(projectData)
+        .select()
+        .single()
+      return { data, error }
+    },
+
+    update: async (projectId: string, updates: Database['public']['Tables']['finetuning_projects']['Update']) => {
+      const { data, error } = await supabase
+        .from('finetuning_projects')
+        .update(updates)
+        .eq('id', projectId)
+        .select()
+        .single()
+      return { data, error }
+    },
+
+    delete: async (projectId: string) => {
+      const { error } = await supabase
+        .from('finetuning_projects')
+        .delete()
+        .eq('id', projectId)
+      return { error }
+    },
+
+    updateStatus: async (projectId: string, status: string, progress?: number) => {
+      const updates: any = { status, updated_at: new Date().toISOString() }
+      if (progress !== undefined) {
+        updates.progress = progress
+      }
+      if (status === 'training' && !updates.training_started_at) {
+        updates.training_started_at = new Date().toISOString()
+      }
+      if (status === 'completed' || status === 'failed') {
+        updates.completed_at = new Date().toISOString()
+      }
+
+      const { data, error } = await supabase
+        .from('finetuning_projects')
+        .update(updates)
+        .eq('id', projectId)
+        .select()
+        .single()
+      return { data, error }
+    }
+  },
+
+  // Rule Executions logging
+  ruleExecutions: {
+    log: async (
+      userId: string,
+      ruleId: string,
+      context: any,
+      inputPrompt: string,
+      outputResult: string,
+      tokensUsed: number = 0,
+      executionTimeMs: number = 0,
+      success: boolean = true,
+      errorMessage?: string
+    ) => {
+      const { data, error } = await supabase
+        .from('rule_executions')
+        .insert({
+          user_id: userId,
+          rule_id: ruleId,
+          context: context,
+          input_prompt: inputPrompt,
+          output_result: outputResult,
+          tokens_used: tokensUsed,
+          execution_time_ms: executionTimeMs,
+          success: success,
+          error_message: errorMessage
+        })
+        .select()
+        .single()
+      return { data, error }
+    },
+
+    getUserExecutions: async (userId: string, limit: number = 50) => {
+      const { data, error } = await supabase
+        .from('rule_executions')
+        .select(`
+          *,
+          custom_rules (name, category)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      return { data, error }
+    }
+  },
+
+  // Workflow Executions
+  workflowExecutions: {
+    create: async (executionData: Database['public']['Tables']['workflow_executions']['Insert']) => {
+      const { data, error } = await supabase
+        .from('workflow_executions')
+        .insert(executionData)
+        .select()
+        .single()
+      return { data, error }
+    },
+
+    update: async (executionId: string, updates: Database['public']['Tables']['workflow_executions']['Update']) => {
+      const { data, error } = await supabase
+        .from('workflow_executions')
+        .update(updates)
+        .eq('id', executionId)
+        .select()
+        .single()
+      return { data, error }
+    },
+
+    getUserExecutions: async (userId: string, limit: number = 50) => {
+      const { data, error } = await supabase
+        .from('workflow_executions')
+        .select(`
+          *,
+          workflow_templates (name, category)
+        `)
+        .eq('user_id', userId)
+        .order('started_at', { ascending: false })
+        .limit(limit)
+      return { data, error }
+    }
   }
 }

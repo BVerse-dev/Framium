@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Check, Edit3, RotateCcw, Save, Sparkles, Image, Target, Box, Layers } from 'lucide-react'
+import { Send, Check, Edit3, RotateCcw, Save, Sparkles, Image, Target, Box, Layers, ChevronDown, Lock, CheckCircle } from 'lucide-react'
 import { framer, CanvasNode } from 'framer-plugin'
 import { useAuth } from '../contexts/AuthContext'
 import { useModel } from '../contexts/ModelContext'
-import { APIService } from '../lib/api'
+import { generateAIResponse } from '../services/aiService'
+import { FramerService } from '../services/framerService'
+import type { CoreMessage } from 'ai'
 
 interface Message {
   id: string
@@ -28,12 +30,36 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ selection }: ChatInterfaceProps) {
   const { user } = useAuth()
-  const { selectedModel, availableModels, mode, setMode, setSelectedModel } = useModel()
+  const { selectedModel, availableModels, mode, setMode, setSelectedModel, canUseModel } = useModel()
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
       type: 'ai',
-      content: `👋 Welcome to **Framium**! I'm your AI design and coding agent.\n\n🎯 **What I can help you with:**\n• Generate Framer components and layouts\n• Create animations with Framer Motion\n• Design hero sections and landing pages\n• Build interactive UI elements\n• Generate placeholder content and assets\n\n💡 **Quick starts:**\n• "Create a pricing section with 3 tiers"\n• "Design a hero with animated background"\n• "Build a testimonial carousel"\n• "Generate a contact form with validation"\n\nWhat would you like to create today?`,
+      content: `🚀 **Framium Pro** is ready to build anything!
+
+I'm an AI design agent that creates professional layouts, components, and applications directly on your Framer canvas. Like Cursor and GitHub Copilot, I understand your vision and build it instantly.
+
+⚡ **I automatically build:**
+• Complete landing pages and marketing sites
+• E-commerce stores with product grids and checkout flows
+• Admin dashboards and analytics interfaces
+• Blog layouts and content management systems
+• Mobile app interfaces and components
+• Custom design systems and component libraries
+
+🎨 **Professional features:**
+• Auto-detects and creates responsive breakpoints (Desktop/Tablet/Phone)
+• Uses root vertical stack architecture (no overlapping elements)
+• Implements 8px spacing system and modern design tokens
+• Generates semantic component names with [Framium] prefix
+• Works whether you have a canvas selected or not
+
+💫 **Just describe what you want to build - I'll create it instantly on your canvas.**
+
+🔧 **Mode: Agent** - I automatically build on canvas
+💡 Switch to **Ask** mode if you only want design advice
+
+Ready to create something amazing?`,
       timestamp: new Date(),
     }
   ])
@@ -41,9 +67,13 @@ export function ChatInterface({ selection }: ChatInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [showFramesDropdown, setShowFramesDropdown] = useState(false)
   const [availableFrames, setAvailableFrames] = useState<FrameItem[]>([])
+  const [showModelDropdown, setShowModelDropdown] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [selectedLockedModel, setSelectedLockedModel] = useState<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const framesDropdownRef = useRef<HTMLDivElement>(null)
+  const modelDropdownRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -124,6 +154,41 @@ export function ChatInterface({ selection }: ChatInterfaceProps) {
     textareaRef.current?.focus()
   }
 
+  // Group models by tier for the dropdown
+  const getModelsByTier = () => {
+    const tiers = ['Basic', 'Max', 'Beast', 'Ultimate'] as const
+    return tiers.map(tier => ({
+      tier,
+      models: availableModels.filter(model => model.tier === tier)
+    })).filter(group => group.models.length > 0)
+  }
+
+  // Handle model selection with upgrade check
+  const handleModelSelect = (model: any) => {
+    if (canUseModel(model)) {
+      setSelectedModel(model)
+      setShowModelDropdown(false)
+    } else {
+      setSelectedLockedModel(model)
+      setShowUpgradeModal(true)
+      setShowModelDropdown(false)
+    }
+  }
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target as Node)) {
+        setShowModelDropdown(false)
+      }
+    }
+
+    if (showModelDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showModelDropdown])
+
   const handleImageUpload = () => {
     // Create hidden file input for image upload
     const input = document.createElement('input')
@@ -201,31 +266,140 @@ export function ChatInterface({ selection }: ChatInterfaceProps) {
     setIsLoading(true)
 
     try {
-      // Call real API instead of simulation
-      const aiResponse = await APIService.sendChatMessage({
-        prompt: inputValue,
-        model: selectedModel.name,
-        selection: selection,
-        mode: mode
-      })
+      // Convert chat message to CoreMessage format
+      const coreMessages: CoreMessage[] = messages.map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }))
       
-      // Add context info
-      const contextInfo = selection.length > 0 ? 
-        `\n\n📋 **Current Selection:** ${selection.length} item(s) selected on canvas` : 
-        '\n\n📋 **Canvas:** No items currently selected'
+      // Add the new user message
+      coreMessages.push({
+        role: 'user',
+        content: inputValue
+      })
 
-      const aiMessage: Message = {
-        id: `ai-${Date.now()}`,
-        type: 'ai',
-        content: aiResponse.content + contextInfo,
-        timestamp: new Date(),
-        tokens: aiResponse.tokens,
-        cost: aiResponse.cost,
-        canApplyToCanvas: aiResponse.canApplyToCanvas,
-        code: aiResponse.code,
+      // Call the real AI service
+      const aiResponse = await generateAIResponse(
+        coreMessages,
+        selectedModel.id,
+        {
+          temperature: 0.7,
+          maxTokens: 1000,
+          systemPrompt: `You are Framium, an AI design and coding agent built for Framer. You're not just an assistant - you're a powerful creative partner that can build anything, just like Cursor and GitHub Copilot.
+
+Your capabilities include:
+- Instantly creating professional layouts, components, and designs on the Framer canvas
+- Building complete applications (landing pages, e-commerce stores, dashboards, blogs)
+- Generating sophisticated UI components with modern design systems
+- Understanding context and creating intelligent, beautiful designs
+- Managing canvas height and layout automatically as you build
+
+When users make requests, you:
+1. Act immediately - no asking for permission or explaining limitations
+2. Create professional, pixel-perfect designs with proper typography, spacing, and color
+3. Use modern design principles (gradients, shadows, proper hierarchy)
+4. Build complete solutions, not just basic wireframes
+5. Adapt design systems based on the project context (minimal, modern, vibrant)
+6. Think like a senior designer and developer combined
+
+Current context:
+- User Plan: ${user?.plan || 'Pro'}
+- Selected Model: ${selectedModel.name}
+- Mode: ${mode}
+- Canvas Selection: ${selection.length > 0 ? `${selection.length} items selected` : 'Clean canvas ready'}
+
+You never say "I'm an AI assistant" or mention limitations. You're a design agent that builds beautiful things instantly.`
+        }
+      )
+      
+      if (aiResponse.success && aiResponse.text) {
+        // Mode-specific logic for canvas generation
+        let shouldCreateComponents = false
+        
+        if (mode === 'agent') {
+          // In Agent mode, automatically create components for ANY design-related request
+          const designKeywords = [
+            'create', 'generate', 'build', 'design', 'make', 'add',
+            'landing page', 'homepage', 'website', 'site', 'page',
+            'store', 'e-commerce', 'ecommerce', 'shop', 'product', 'cart', 'checkout',
+            'wireframe', 'layout', 'application', 'app', 'dashboard', 'admin',
+            'hero', 'banner', 'header', 'footer', 'navigation', 'nav', 'menu',
+            'pricing', 'plan', 'tier', 'subscription', 'payment',
+            'contact', 'form', 'input', 'button', 'cta', 'call to action',
+            'blog', 'article', 'content', 'post', 'news',
+            'gallery', 'portfolio', 'showcase', 'grid',
+            'testimonial', 'review', 'feedback', 'quote',
+            'feature', 'service', 'benefit', 'advantage',
+            'about', 'team', 'company', 'organization',
+            'login', 'signup', 'register', 'authentication', 'auth',
+            'profile', 'account', 'user', 'settings',
+            'search', 'filter', 'sort', 'pagination',
+            'notification', 'alert', 'message', 'toast',
+            'modal', 'popup', 'dialog', 'overlay',
+            'sidebar', 'panel', 'section', 'component', 'widget',
+            'card', 'list', 'table', 'chart', 'graph',
+            'animation', 'transition', 'effect', 'motion',
+            'responsive', 'mobile', 'tablet', 'desktop',
+            'modern', 'clean', 'minimal', 'professional', 'beautiful',
+            'colorful', 'vibrant', 'elegant', 'sophisticated'
+          ]
+          
+          const inputLower = inputValue.toLowerCase()
+          shouldCreateComponents = designKeywords.some(keyword => inputLower.includes(keyword)) ||
+                                 inputLower.includes('surprise') ||
+                                 inputLower.includes('proceed') ||
+                                 inputLower.includes('help me') ||
+                                 inputLower.includes('i want') ||
+                                 inputLower.includes('i need') ||
+                                 inputLower.includes('can you') ||
+                                 inputLower.includes('would you')
+        }
+        // In Ask mode, never create components automatically - only provide text responses
+        
+        console.log('Mode:', mode)
+        console.log('Input value:', inputValue)
+        console.log('Should create components:', shouldCreateComponents)
+        
+        if (shouldCreateComponents) {
+          // Execute the canvas creation in the background (Agent mode only)
+          console.log('Executing canvas creation in Agent mode...')
+          setTimeout(async () => {
+            try {
+              const result = await FramerService.executeAIRequest(inputValue)
+              console.log('Canvas creation result:', result)
+            } catch (error) {
+              console.error('Canvas creation error:', error)
+            }
+          }, 500)
+        }
+        
+        // Add mode-specific context info
+        let contextInfo = ''
+        if (mode === 'ask') {
+          contextInfo = selection.length > 0 ? 
+            `\n\n📋 **Current Selection:** ${selection.length} item(s) selected on canvas\n💡 **Tip:** Switch to Agent mode to automatically create components on canvas` : 
+            '\n\n📋 **Canvas:** No items currently selected\n💡 **Tip:** Switch to Agent mode to automatically create components on canvas'
+        } else {
+          contextInfo = selection.length > 0 ? 
+            `\n\n📋 **Current Selection:** ${selection.length} item(s) selected on canvas` : 
+            '\n\n📋 **Canvas:** Ready for component creation'
+        }
+
+        const aiMessage: Message = {
+          id: `ai-${Date.now()}`,
+          type: 'ai',
+          content: aiResponse.text + contextInfo,
+          timestamp: new Date(),
+          tokens: aiResponse.usage?.totalTokens || 0,
+          cost: aiResponse.usage?.totalTokens ? (aiResponse.usage.totalTokens / 1000) * (selectedModel.costPer1kTokens || 0.001) : 0,
+          canApplyToCanvas: shouldCreateComponents || aiResponse.text.toLowerCase().includes('component') || aiResponse.text.toLowerCase().includes('create'),
+          code: aiResponse.text.includes('```') ? 'ai-generated-code' : undefined,
+        }
+
+        setMessages(prev => [...prev, aiMessage])
+      } else {
+        throw new Error(aiResponse.error || 'AI service failed')
       }
-
-      setMessages(prev => [...prev, aiMessage])
     } catch (error) {
       console.error('Error sending message:', error)
       
@@ -264,58 +438,61 @@ export function ChatInterface({ selection }: ChatInterfaceProps) {
   }
 
   const handleApplyToCanvas = async (message: Message) => {
-    if (!message.code) return
-
     try {
-      // Enhanced component generation with different types based on message content
-      const componentType = message.content.toLowerCase().includes('pricing') ? 'pricing' :
-                           message.content.toLowerCase().includes('hero') ? 'hero' :
-                           message.content.toLowerCase().includes('button') ? 'button' : 'component'
+      // Use the new FramerService to execute the AI request
+      const success = await FramerService.executeAIRequest(message.content)
       
-      const componentSVGs = {
-        pricing: `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">
-          <rect width="300" height="400" fill="#f8fafc" stroke="#e2e8f0" rx="12"/>
-          <rect x="20" y="20" width="260" height="60" fill="#3b82f6" rx="8"/>
-          <text x="150" y="55" text-anchor="middle" fill="white" font-size="18" font-weight="600">Basic Plan</text>
-          <text x="150" y="100" text-anchor="middle" fill="#1f2937" font-size="32" font-weight="700">$9/mo</text>
-          <rect x="20" y="130" width="260" height="200" fill="#ffffff" stroke="#e5e7eb" rx="6"/>
-          <text x="30" y="155" fill="#374151" font-size="14">✓ Feature 1</text>
-          <text x="30" y="180" fill="#374151" font-size="14">✓ Feature 2</text>
-          <text x="30" y="205" fill="#374151" font-size="14">✓ Feature 3</text>
-          <rect x="40" y="350" width="220" height="35" fill="#3b82f6" rx="6"/>
-          <text x="150" y="372" text-anchor="middle" fill="white" font-size="14" font-weight="600">Get Started</text>
-        </svg>`,
-        hero: `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
-          <defs>
-            <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-              <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-            </linearGradient>
-          </defs>
-          <rect width="400" height="300" fill="url(#heroGrad)" rx="12"/>
-          <text x="200" y="120" text-anchor="middle" fill="white" font-size="28" font-weight="700">Build Amazing UIs</text>
-          <text x="200" y="150" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="16">With AI-powered design tools</text>
-          <rect x="150" y="180" width="100" height="40" fill="rgba(255,255,255,0.2)" stroke="white" rx="8"/>
-          <text x="200" y="205" text-anchor="middle" fill="white" font-size="14" font-weight="600">Get Started</text>
-        </svg>`,
-        button: `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="50" viewBox="0 0 150 50">
-          <rect width="150" height="50" fill="#10b981" rx="8"/>
-          <text x="75" y="32" text-anchor="middle" fill="white" font-size="16" font-weight="600">Click Me</text>
-        </svg>`,
-        component: `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100">
-          <rect width="200" height="100" fill="#6366f1" rx="8"/>
-          <text x="100" y="55" text-anchor="middle" fill="white" font-family="Inter" font-size="16" font-weight="600">
-            Generated Component
-          </text>
-        </svg>`
+      if (!success) {
+        // Fallback to the original implementation if FramerService doesn't handle it
+        const componentType = message.content.toLowerCase().includes('pricing') ? 'pricing' :
+                             message.content.toLowerCase().includes('hero') ? 'hero' :
+                             message.content.toLowerCase().includes('button') ? 'button' : 'component'
+        
+        const componentSVGs = {
+          pricing: `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">
+            <rect width="300" height="400" fill="#f8fafc" stroke="#e2e8f0" rx="12"/>
+            <rect x="20" y="20" width="260" height="60" fill="#3b82f6" rx="8"/>
+            <text x="150" y="55" text-anchor="middle" fill="white" font-size="18" font-weight="600">Basic Plan</text>
+            <text x="150" y="100" text-anchor="middle" fill="#1f2937" font-size="32" font-weight="700">$9/mo</text>
+            <rect x="20" y="130" width="260" height="200" fill="#ffffff" stroke="#e5e7eb" rx="6"/>
+            <text x="30" y="155" fill="#374151" font-size="14">✓ Feature 1</text>
+            <text x="30" y="180" fill="#374151" font-size="14">✓ Feature 2</text>
+            <text x="30" y="205" fill="#374151" font-size="14">✓ Feature 3</text>
+            <rect x="40" y="350" width="220" height="35" fill="#3b82f6" rx="6"/>
+            <text x="150" y="372" text-anchor="middle" fill="white" font-size="14" font-weight="600">Get Started</text>
+          </svg>`,
+          hero: `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+            <defs>
+              <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <rect width="400" height="300" fill="url(#heroGrad)" rx="12"/>
+            <text x="200" y="120" text-anchor="middle" fill="white" font-size="28" font-weight="700">Build Amazing UIs</text>
+            <text x="200" y="150" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="16">With AI-powered design tools</text>
+            <rect x="150" y="180" width="100" height="40" fill="rgba(255,255,255,0.2)" stroke="white" rx="8"/>
+            <text x="200" y="205" text-anchor="middle" fill="white" font-size="14" font-weight="600">Get Started</text>
+          </svg>`,
+          button: `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="50" viewBox="0 0 150 50">
+            <rect width="150" height="50" fill="#10b981" rx="8"/>
+            <text x="75" y="32" text-anchor="middle" fill="white" font-size="16" font-weight="600">Click Me</text>
+          </svg>`,
+          component: `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100">
+            <rect width="200" height="100" fill="#6366f1" rx="8"/>
+            <text x="100" y="55" text-anchor="middle" fill="white" font-family="Inter" font-size="16" font-weight="600">
+              Generated Component
+            </text>
+          </svg>`
+        }
+
+        await framer.addSVG({
+          svg: componentSVGs[componentType as keyof typeof componentSVGs],
+          name: `Framium-${componentType}-${Date.now()}.svg`,
+        })
+
+        framer.notify(`✅ ${componentType.charAt(0).toUpperCase() + componentType.slice(1)} component applied to canvas!`)
       }
-
-      await framer.addSVG({
-        svg: componentSVGs[componentType as keyof typeof componentSVGs],
-        name: `Framium-${componentType}-${Date.now()}.svg`,
-      })
-
-      framer.notify(`✅ ${componentType.charAt(0).toUpperCase() + componentType.slice(1)} component applied to canvas!`)
     } catch (error) {
       console.error('Error applying to canvas:', error)
       framer.notify('❌ Error applying component to canvas')
@@ -354,23 +531,42 @@ export function ChatInterface({ selection }: ChatInterfaceProps) {
                 ⚡ Agent Mode
               </button>
             </div>
-            <div className="model-selector">
-              <select 
-                value={selectedModel.id}
-                onChange={(e) => {
-                  const model = availableModels.find(m => m.id === e.target.value)
-                  if (model) {
-                    setSelectedModel(model)
-                  }
-                }}
-                className="model-select"
+            <div className="model-selector" ref={modelDropdownRef}>
+              <button 
+                className="model-select-button"
+                onClick={() => setShowModelDropdown(!showModelDropdown)}
               >
-                {availableModels.map(model => (
-                  <option key={model.id} value={model.id}>
-                    {model.name}
-                  </option>
-                ))}
-              </select>
+                <span className="model-name">{selectedModel.name}</span>
+                <ChevronDown size={16} className={`chevron ${showModelDropdown ? 'open' : ''}`} />
+              </button>
+              
+              {showModelDropdown && (
+                <div className="model-dropdown">
+                  {getModelsByTier().map(({ tier, models }) => (
+                    <div key={tier} className="model-tier-group">
+                      <div className="model-tier-header">
+                        {tier} Models
+                      </div>
+                      {models.map(model => {
+                        const isLocked = !canUseModel(model)
+                        return (
+                          <button
+                            key={model.id}
+                            className={`model-option ${selectedModel.id === model.id ? 'selected' : ''} ${isLocked ? 'locked' : ''}`}
+                            onClick={() => handleModelSelect(model)}
+                          >
+                            <span className="model-option-name">{model.name}</span>
+                            <div className="model-option-icons">
+                              {selectedModel.id === model.id && <CheckCircle size={14} className="check-icon" />}
+                              {isLocked && <Lock size={14} className="lock-icon" />}
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -561,6 +757,52 @@ export function ChatInterface({ selection }: ChatInterfaceProps) {
           </div>
         </div>
       </div>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && selectedLockedModel && (
+        <div className="upgrade-modal-overlay">
+          <div className="upgrade-modal">
+            <div className="upgrade-modal-header">
+              <h3>Unlock {selectedLockedModel.name}</h3>
+              <button 
+                className="upgrade-modal-close"
+                onClick={() => setShowUpgradeModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="upgrade-modal-content">
+              <p>
+                <strong>{selectedLockedModel.name}</strong> is available with the <strong>{selectedLockedModel.tier}</strong> plan.
+              </p>
+              <p>
+                Upgrade your plan to access this model and unlock more powerful AI capabilities.
+              </p>
+            </div>
+            <div className="upgrade-modal-actions">
+              <button 
+                className="upgrade-button primary"
+                onClick={() => {
+                  // TODO: Navigate to upgrade page with selected plan
+                  setShowUpgradeModal(false)
+                  framer.notify(`🚀 Upgrade to ${selectedLockedModel.tier} plan to unlock ${selectedLockedModel.name}`)
+                }}
+              >
+                Upgrade to {selectedLockedModel.tier}
+              </button>
+              <button 
+                className="upgrade-button secondary"
+                onClick={() => {
+                  setShowUpgradeModal(false)
+                  // Keep current model selection
+                }}
+              >
+                Switch Models
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

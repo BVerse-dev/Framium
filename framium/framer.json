@@ -6,5 +6,23 @@
   ],
   "icon": "/icon.svg",
   "description": "AI-powered design and coding agent for Framer - Generate, design, and animate with multiple AI models",
-  "author": "Framium Labs"
+  "author": "Framium Labs",
+  "permissions": [
+    "addSVG",
+    "addImage", 
+    "setImage",
+    "createFrameNode",
+    "addComponentInstance",
+    "addDetachedComponentLayers",
+    "Node.setAttributes",
+    "Node.getRect",
+    "Node.getChildren",
+    "CanvasNode.setAttributes",
+    "FrameNode.setAttributes",
+    "Canvas.getCanvasRoot",
+    "Canvas.getSelection",
+    "Canvas.setSelection",
+    "ManagedCollection.addItems",
+    "ManagedCollection.setFields"
+  ]
 }

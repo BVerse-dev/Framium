@@ -2,58 +2,96 @@ import { useState } from 'react'
 import { Check, Lock, Zap, Flame, Rocket, TrendingUp, Clock, Crown } from 'lucide-react'
 import { framer } from 'framer-plugin'
 import { useAuth } from '../contexts/AuthContext'
-import { useModel, AI_MODELS, AIModel } from '../contexts/ModelContext'
+import { useModel, AIModel } from '../contexts/ModelContext'
 
 export function ModelsPanel() {
   const { user, updatePlan } = useAuth()
-  const { selectedModel, setSelectedModel, canUseModel, getTokenCost } = useModel()
+  const { selectedModel, availableModels, setSelectedModel, canUseModel, getTokenCost } = useModel()
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState<'BASIC' | 'MAX' | 'BEAST' | 'ULTIMATE'>('MAX')
+  const [selectedPlan, setSelectedPlan] = useState<'Basic' | 'Max' | 'Beast' | 'Ultimate'>('Max')
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [isLoading, setIsLoading] = useState(false)
 
   const modelsByTier = {
-    BASIC: AI_MODELS.filter(m => m.tier === 'BASIC'),
-    MAX: AI_MODELS.filter(m => m.tier === 'MAX'),
-    BEAST: AI_MODELS.filter(m => m.tier === 'BEAST'),
-    ULTIMATE: AI_MODELS.filter(m => m.tier === 'BEAST') // Use BEAST models for now
+    Basic: availableModels.filter((m: AIModel) => m.tier === 'Basic'),
+    Max: availableModels.filter((m: AIModel) => m.tier === 'Max'),
+    Beast: availableModels.filter((m: AIModel) => m.tier === 'Beast'),
+    Ultimate: availableModels.filter((m: AIModel) => m.tier === 'Ultimate')
   }
 
+  // Debug logging
+  console.log('ModelsPanel - Available models:', availableModels.length)
+  console.log('ModelsPanel - Models by tier:', {
+    Basic: modelsByTier.Basic.length,
+    Max: modelsByTier.Max.length,
+    Beast: modelsByTier.Beast.length,
+    Ultimate: modelsByTier.Ultimate.length
+  })
+  console.log('ModelsPanel - User plan:', user?.plan || 'No user')
+
   const planDetails = {
-    BASIC: {
+    Basic: {
       icon: <Zap size={20} className="text-gray-400" />,
       name: 'Basic',
       monthlyPrice: 9,
       yearlyPrice: 90,
-      tokens: '50K tokens/month',
-      features: ['GPT-3.5 Turbo', 'Claude 3 Haiku', 'Basic components', 'Standard support'],
+      tokens: '100K tokens/month',
+      features: [
+        'GPT-3.5 Turbo & Claude 3 Haiku',
+        'Gemini 1.5 Flash',
+        'Basic UI components',
+        'Standard response speed',
+        'Email support'
+      ],
       color: '#6b7280'
     },
-    MAX: {
+    Max: {
       icon: <Rocket size={20} className="text-blue-400" />,
       name: 'Max',
       monthlyPrice: 29,
       yearlyPrice: 290,
-      tokens: '250K tokens/month',
-      features: ['All Basic models', 'GPT-4 Turbo', 'Claude 3 Sonnet', 'Advanced animations', 'Priority support'],
+      tokens: '500K tokens/month',
+      features: [
+        'All Basic models + GPT-4o Mini',
+        'Claude 3.5 Haiku & GPT-4 Turbo',
+        'Cohere Command R',
+        'Advanced animations & components',
+        'Priority support',
+        'Faster response times'
+      ],
       color: '#3b82f6'
     },
-    BEAST: {
+    Beast: {
       icon: <Flame size={20} className="text-orange-400" />,
       name: 'Beast',
       monthlyPrice: 79,
       yearlyPrice: 790,
-      tokens: '1M tokens/month',
-      features: ['All Max models', 'Claude 3 Opus', 'Gemini Pro', 'Agent mode', 'Custom integrations', 'White-glove support'],
+      tokens: '2M tokens/month',
+      features: [
+        'All Max + GPT-4o & Claude 3.5 Sonnet',
+        'Gemini 1.5 Pro & Grok Beta',
+        'Llama 3.1 70B & Command R+',
+        'Agent mode & automation',
+        'Custom integrations',
+        'White-glove support'
+      ],
       color: '#f97316'
     },
-    ULTIMATE: {
+    Ultimate: {
       icon: <Crown size={20} className="text-purple-400" />,
       name: 'Ultimate',
       monthlyPrice: 199,
       yearlyPrice: 1990,
       tokens: 'Unlimited tokens',
-      features: ['All Beast models', 'Custom model training', 'Advanced model control', 'White-label options', 'Custom integrations', '24/7 dedicated support'],
+      features: [
+        'All Beast + Claude 3 Opus',
+        'Llama 3.1 405B & Mistral Large',
+        'Perplexity Sonar Large',
+        'Real-time web search',
+        'Custom model fine-tuning',
+        'White-label options',
+        '24/7 dedicated support'
+      ],
       color: '#a855f7'
     }
   }
@@ -74,8 +112,8 @@ export function ModelsPanel() {
       setIsLoading(true)
       await new Promise(resolve => setTimeout(resolve, 2000))
       
-      // Map ULTIMATE to BEAST for now since auth context only supports those 3 plans
-      const planToUpdate = selectedPlan === 'ULTIMATE' ? 'BEAST' : selectedPlan
+      // Map Ultimate to Ultimate since auth context now supports all plans
+      const planToUpdate = selectedPlan
       
       // Update user plan in context
       await updatePlan(planToUpdate)
@@ -95,11 +133,16 @@ export function ModelsPanel() {
   }
 
   const getProviderIcon = (provider: string) => {
-    switch (provider) {
+    switch (provider.toLowerCase()) {
       case 'openai': return '🤖'
       case 'anthropic': return '🧠'
       case 'google': return '🔮'
+      case 'xai': return '🚀'
+      case 'meta-llama': 
+      case 'meta': return '🦙'
+      case 'cohere': return '🔷'
       case 'mistral': return '⚡'
+      case 'perplexity': return '🔍'
       default: return '🤖'
     }
   }
@@ -215,7 +258,7 @@ export function ModelsPanel() {
                   <div className="model-specs">
                     <div className="spec-item">
                       <Clock size={12} />
-                      <span>{formatNumber(model.maxTokens)} tokens</span>
+                      <span>{formatNumber(model.maxTokens || 8192)} tokens</span>
                     </div>
                     <div className="spec-item">
                       <TrendingUp size={12} />
@@ -243,13 +286,19 @@ export function ModelsPanel() {
         <h4>💡 Model Recommendations</h4>
         <div className="recommendations">
           <div className="recommendation">
-            <strong>For UI Design:</strong> Claude 3 Sonnet - Best for layout and component generation
+            <strong>For UI/UX Design:</strong> Claude 3.5 Sonnet - Superior component generation and design understanding
           </div>
           <div className="recommendation">
-            <strong>For Complex Logic:</strong> GPT-4 Turbo - Excellent reasoning and code generation
+            <strong>For Complex Coding:</strong> GPT-4o - Advanced reasoning with function calling capabilities
           </div>
           <div className="recommendation">
-            <strong>For Agent Tasks:</strong> Claude 3 Opus - Multi-step planning and execution
+            <strong>For Real-time Data:</strong> Grok Beta or Perplexity - Live web search and current information
+          </div>
+          <div className="recommendation">
+            <strong>For Enterprise/RAG:</strong> Command R+ - Specialized retrieval and document processing
+          </div>
+          <div className="recommendation">
+            <strong>For Multimodal:</strong> Gemini 1.5 Pro - Vision, extended context, and multimedia processing
           </div>
         </div>
       </div>
